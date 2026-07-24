@@ -11,6 +11,7 @@ import {
   useQuery,
   useQueryClient
 } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -47,6 +48,24 @@ export default function TablesPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedTable(null);
@@ -173,7 +192,8 @@ export default function TablesPage() {
 
       setOpen(false);
       setSelectedTable(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateTableMutation = useMutation({
@@ -197,7 +217,8 @@ export default function TablesPage() {
 
       setOpen(false);
       setSelectedTable(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteTableMutation = useMutation({
@@ -215,7 +236,8 @@ export default function TablesPage() {
 
       setDeleteOpen(false);
       setSelectedTable(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -294,6 +316,12 @@ export default function TablesPage() {
     createTableMutation.isPending ||
     updateTableMutation.isPending;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
   return (
     <>
       <MainCard
@@ -319,9 +347,8 @@ export default function TablesPage() {
             columns={tableColumns}
             rows={tables}
             getRowId={(table) => table.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No tables found."
             searchValue={search}
             searchPlaceholder="Search tables..."

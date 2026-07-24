@@ -11,6 +11,7 @@ import {
   useQuery,
   useQueryClient
 } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
@@ -60,6 +61,24 @@ export default function ProductsPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedProduct(null);
@@ -140,7 +159,12 @@ export default function ProductsPage() {
     placeholderData: (previousData) => previousData
   });
 
-  const { data: categoryOptionsData } = useQuery({
+  const {
+    data: categoryOptionsData,
+    isLoading: isCategoriesLoading,
+    isError: isCategoriesError,
+    error: categoriesError
+  } = useQuery({
     queryKey: ['category-name-list'],
     queryFn: async () => {
       const response = await api.get(
@@ -151,7 +175,12 @@ export default function ProductsPage() {
     }
   });
 
-  const { data: brandOptionsData } = useQuery({
+  const {
+    data: brandOptionsData,
+    isLoading: isBrandsLoading,
+    isError: isBrandsError,
+    error: brandsError
+  } = useQuery({
     queryKey: ['brand-name-list'],
     queryFn: async () => {
       const response = await api.get(
@@ -233,7 +262,8 @@ export default function ProductsPage() {
 
       setOpen(false);
       setSelectedProduct(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateProductMutation = useMutation({
@@ -264,7 +294,8 @@ export default function ProductsPage() {
 
       setOpen(false);
       setSelectedProduct(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteProductMutation = useMutation({
@@ -282,7 +313,8 @@ export default function ProductsPage() {
 
       setDeleteOpen(false);
       setSelectedProduct(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -365,6 +397,32 @@ export default function ProductsPage() {
     createProductMutation.isPending ||
     updateProductMutation.isPending;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
+  useEffect(() => {
+    if (isCategoriesError && categoriesError) {
+      showApiError(categoriesError);
+    }
+  }, [
+    isCategoriesError,
+    categoriesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isBrandsError && brandsError) {
+      showApiError(brandsError);
+    }
+  }, [
+    isBrandsError,
+    brandsError,
+    showApiError
+  ]);
+
   return (
     <>
       <MainCard
@@ -373,6 +431,12 @@ export default function ProductsPage() {
           <Button
             variant="contained"
             onClick={handleOpenCreate}
+            disabled={
+              isCategoriesLoading ||
+              isBrandsLoading ||
+              isCategoriesError ||
+              isBrandsError
+            }
           >
             Add Product
           </Button>
@@ -390,9 +454,8 @@ export default function ProductsPage() {
             columns={productColumns}
             rows={products}
             getRowId={(product) => product.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No products found."
             searchValue={search}
             searchPlaceholder="Search products..."

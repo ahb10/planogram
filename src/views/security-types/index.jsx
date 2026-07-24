@@ -12,6 +12,8 @@ import {
   useQueryClient
 } from '@tanstack/react-query';
 
+import { useSnackbar } from 'notistack';
+
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -44,6 +46,23 @@ export default function SecurityTypePage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error'
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedSecurityType(null);
@@ -162,7 +181,8 @@ export default function SecurityTypePage() {
 
       setOpen(false);
       setSelectedSecurityType(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateSecurityMutation = useMutation({
@@ -185,7 +205,8 @@ export default function SecurityTypePage() {
 
       setOpen(false);
       setSelectedSecurityType(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteSecurityMutation = useMutation({
@@ -203,7 +224,8 @@ export default function SecurityTypePage() {
 
       setDeleteOpen(false);
       setSelectedSecurityType(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -267,6 +289,12 @@ export default function SecurityTypePage() {
     createSecurityMutation.isPending ||
     updateSecurityMutation.isPending;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
   return (
     <>
       <MainCard
@@ -293,9 +321,8 @@ export default function SecurityTypePage() {
             columns={securityColumns}
             rows={securityTypes}
             getRowId={(securityType) => securityType.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No security type found."
             searchValue={search}
             searchPlaceholder="Search security types..."

@@ -14,7 +14,7 @@ import {
   useQueryClient
 } from '@tanstack/react-query';
 
-import Alert from '@mui/material/Alert';
+import { useSnackbar } from 'notistack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -64,39 +64,6 @@ const getUserSchema = (isEditMode) =>
       })
   });
 
-const getErrorMessage = (error) => {
-  const responseData = error?.response?.data;
-
-  if (typeof responseData === 'string') {
-    return responseData;
-  }
-
-  if (responseData?.message) {
-    return responseData.message;
-  }
-
-  if (responseData?.detail) {
-    return responseData.detail;
-  }
-
-  if (
-    responseData &&
-    typeof responseData === 'object'
-  ) {
-    const firstError = Object.values(responseData)[0];
-
-    if (Array.isArray(firstError)) {
-      return firstError[0];
-    }
-
-    if (typeof firstError === 'string') {
-      return firstError;
-    }
-  }
-
-  return error?.message || 'Something went wrong.';
-};
-
 const createUserFormData = (values) => {
   const formData = new FormData();
 
@@ -131,6 +98,23 @@ export default function UserManagementPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error'
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedUser(null);
@@ -264,7 +248,8 @@ export default function UserManagementPage() {
       setOpen(false);
       setSelectedUser(null);
       setShowPassword(false);
-    }
+    },
+    onError: showApiError
   });
 
   const updateUserMutation = useMutation({
@@ -284,7 +269,8 @@ export default function UserManagementPage() {
       setOpen(false);
       setSelectedUser(null);
       setShowPassword(false);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteUserMutation = useMutation({
@@ -316,7 +302,8 @@ export default function UserManagementPage() {
         ],
         exact: true
       });
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -409,6 +396,12 @@ export default function UserManagementPage() {
     createUserMutation.error ||
     updateUserMutation.error;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+  
   return (
     <>
       <MainCard
@@ -439,7 +432,7 @@ export default function UserManagementPage() {
             error={
               isError
                 ? {
-                  message: getErrorMessage(error)
+                  message: showApiError(error)
                 }
                 : null
             }
@@ -476,13 +469,6 @@ export default function UserManagementPage() {
             ?
           </Typography>
 
-          {deleteUserMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {getErrorMessage(
-                deleteUserMutation.error
-              )}
-            </Alert>
-          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -541,11 +527,6 @@ export default function UserManagementPage() {
                 onSubmit={submitForm}
               >
                 <Stack spacing={2} sx={{ mt: 1 }}>
-                  {saveError && (
-                    <Alert severity="error">
-                      {getErrorMessage(saveError)}
-                    </Alert>
-                  )}
 
                   <FormControl
                     fullWidth

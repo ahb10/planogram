@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Formik } from 'formik';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -13,6 +13,7 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { useSnackbar } from 'notistack';
 
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
@@ -36,6 +37,23 @@ export default function RegionPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchValue, setSearchValue] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error'
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenDescription = useCallback((region) => {
     setDescriptionRegion(region);
@@ -103,7 +121,8 @@ export default function RegionPage() {
 
       setOpen(false);
       setSelectedRegion(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateRegionMutation = useMutation({
@@ -122,7 +141,8 @@ export default function RegionPage() {
 
       setOpen(false);
       setSelectedRegion(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteRegionMutation = useMutation({
@@ -144,7 +164,8 @@ export default function RegionPage() {
 
       setDeleteOpen(false);
       setSelectedRegion(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleOpenCreate = () => {
@@ -214,12 +235,6 @@ export default function RegionPage() {
           region?.name || `Region ${rowIndex + 1}`
       },
       {
-        id: 'is_active',
-        label: 'Status',
-        render: (region) =>
-          region?.is_active ? 'Active' : 'Inactive'
-      },
-      {
         id: 'description',
         label: 'Description',
         align: 'center',
@@ -277,9 +292,11 @@ export default function RegionPage() {
     createRegionMutation.isPending ||
     updateRegionMutation.isPending;
 
-  const mutationError =
-    createRegionMutation.error ||
-    updateRegionMutation.error;
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
 
   return (
     <>
@@ -305,7 +322,7 @@ export default function RegionPage() {
             rows={regions}
             getRowId={(region) => region?.id}
             loading={isLoading || isFetching}
-            error={isError ? error : null}
+            error={null}  
             emptyMessage="No regions found."
             searchValue={searchValue}
             searchPlaceholder="Search regions..."
@@ -337,18 +354,6 @@ export default function RegionPage() {
             </strong>
             ?
           </Typography>
-
-          {deleteRegionMutation.isError && (
-            <Typography
-              variant="body2"
-              color="error"
-              sx={{ mt: 2 }}
-            >
-              {deleteRegionMutation.error?.response?.data?.message ||
-                deleteRegionMutation.error?.message ||
-                'Failed to delete region.'}
-            </Typography>
-          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -475,17 +480,6 @@ export default function RegionPage() {
                         </Typography>
                       )}
                   </FormControl>
-
-                  {mutationError && (
-                    <Typography
-                      variant="body2"
-                      color="error"
-                    >
-                      {mutationError?.response?.data?.message ||
-                        mutationError?.message ||
-                        'Failed to save region.'}
-                    </Typography>
-                  )}
                 </Stack>
               </form>
             )}

@@ -11,6 +11,7 @@ import {
   useQuery,
   useQueryClient
 } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -44,6 +45,24 @@ export default function CategoryPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedCategory(null);
@@ -152,7 +171,8 @@ export default function CategoryPage() {
 
       setOpen(false);
       setSelectedCategory(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateCategoryMutation = useMutation({
@@ -176,7 +196,8 @@ export default function CategoryPage() {
 
       setOpen(false);
       setSelectedCategory(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteCategoryMutation = useMutation({
@@ -194,7 +215,8 @@ export default function CategoryPage() {
 
       setDeleteOpen(false);
       setSelectedCategory(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -257,6 +279,12 @@ export default function CategoryPage() {
     createCategoryMutation.isPending ||
     updateCategoryMutation.isPending;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
   return (
     <>
       <MainCard
@@ -282,9 +310,8 @@ export default function CategoryPage() {
             columns={categoryColumns}
             rows={categories}
             getRowId={(category) => category.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No Categories found."
             searchValue={search}
             searchPlaceholder="Search categories..."

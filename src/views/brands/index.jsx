@@ -11,6 +11,7 @@ import {
   useQuery,
   useQueryClient
 } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
@@ -44,6 +45,24 @@ export default function BrandsPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
 
   const handleOpenCreate = useCallback(() => {
     setSelectedBrand(null);
@@ -158,7 +177,8 @@ export default function BrandsPage() {
 
       setOpen(false);
       setSelectedBrand(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateBrandMutation = useMutation({
@@ -182,7 +202,8 @@ export default function BrandsPage() {
 
       setOpen(false);
       setSelectedBrand(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteBrandMutation = useMutation({
@@ -200,7 +221,8 @@ export default function BrandsPage() {
 
       setDeleteOpen(false);
       setSelectedBrand(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -263,6 +285,12 @@ export default function BrandsPage() {
     createBrandMutation.isPending ||
     updateBrandMutation.isPending;
 
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
   return (
     <>
       <MainCard
@@ -288,9 +316,8 @@ export default function BrandsPage() {
             columns={brandColumns}
             rows={brands}
             getRowId={(brand) => brand.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No brands found."
             searchValue={search}
             searchPlaceholder="Search brands..."

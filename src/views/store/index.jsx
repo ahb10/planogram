@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Formik } from 'formik';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
@@ -161,6 +162,24 @@ export default function StorePage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
 
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
+
   const handleTableSearchChange = useCallback((value) => {
     const normalizedValue = String(value || '').trim();
 
@@ -224,7 +243,9 @@ export default function StorePage() {
 
   const {
     data: regionOptionsData,
-    isLoading: isRegionsLoading
+    isLoading: isRegionsLoading,
+    isError: isRegionsError,
+    error: regionsError
   } = useQuery({
     queryKey: ['region-name-list'],
     queryFn: async () => {
@@ -345,7 +366,8 @@ export default function StorePage() {
       setOpen(false);
       setSelectedStore(null);
       setImagePreviews([]);
-    }
+    },
+    onError: showApiError
   });
 
   const updateStoreMutation = useMutation({
@@ -396,14 +418,7 @@ export default function StorePage() {
       setSelectedStore(null);
       setImagePreviews([]);
     },
-
-    onError: (error) => {
-      console.error('Update store error:', {
-        message: error?.message,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
-    }
+    onError: showApiError
   });
 
   const deleteStoreImageMutation = useMutation({
@@ -423,7 +438,8 @@ export default function StorePage() {
       queryClient.invalidateQueries({
         queryKey: ['inventory-display-overview']
       });
-    }
+    },
+    onError: showApiError
   });
 
   const removeLocalImage = (imageIndex) => {
@@ -455,7 +471,8 @@ export default function StorePage() {
       queryClient.invalidateQueries({ queryKey: ['store-list'] });
       setDeleteOpen(false);
       setSelectedStore(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleOpenCreate = () => {
@@ -600,18 +617,33 @@ export default function StorePage() {
     } catch (error) {
       console.error('Delete image error:', {
         message: error?.message,
-        status: error?.response?.status,
         data: error?.response?.data
       });
     }
   };
+
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
+  useEffect(() => {
+    if (isRegionsError && regionsError) {
+      showApiError(regionsError);
+    }
+  }, [
+    isRegionsError,
+    regionsError,
+    showApiError
+  ]);
 
   return (
     <>
       <MainCard
         title="Stores"
         secondary={
-          <Button variant="contained" onClick={handleOpenCreate}>
+          <Button variant="contained" onClick={handleOpenCreate} disabled={isRegionsLoading || isRegionsError}>
             Add Store
           </Button>
         }
@@ -624,9 +656,8 @@ export default function StorePage() {
             columns={storeColumns}
             rows={stores}
             getRowId={(store) => store.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={isError ? error : null}
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No stores found."
             searchValue={search}
             searchPlaceholder="Search stores..."
@@ -763,17 +794,14 @@ export default function StorePage() {
                     id="store-region"
                     options={regionOptions}
                     loading={isRegionsLoading}
+                    disabled={isRegionsLoading || isRegionsError}
                     autoHighlight
                     clearOnEscape
                     value={
                       regionOptions.find((option) => {
-                        const optionName =
-                          option?.region_name ||
-                          '';
-
                         return (
                           String(option?.id) === String(values.region) ||
-                          optionName === values.region_name
+                          option?.name === values.region_name
                         );
                       }) || null
                     }
@@ -781,23 +809,17 @@ export default function StorePage() {
                       String(option?.id) === String(selectedOption?.id)
                     }
                     getOptionLabel={(option) =>
-                      String(
-                        option?.region_name ||
-                        ''
-                      )
+                      String(option?.name || '')
                     }
                     onChange={(_, selectedRegion) => {
                       setFieldValue(
                         'region',
-                        selectedRegion?.id !== undefined
-                          ? selectedRegion.id
-                          : ''
+                        selectedRegion?.id ?? ''
                       );
 
                       setFieldValue(
                         'region_name',
-                        selectedRegion?.region_name ||
-                        ''
+                        selectedRegion?.name || ''
                       );
                     }}
                     onBlur={() => {
@@ -809,15 +831,22 @@ export default function StorePage() {
                         name="region"
                         label="Region"
                         placeholder="Search and select region"
-                        error={Boolean(touched.region && errors.region)}
+                        error={Boolean(
+                          touched.region && errors.region
+                        )}
                         helperText={
-                          touched.region && errors.region ? errors.region : ''
+                          touched.region && errors.region
+                            ? errors.region
+                            : ''
                         }
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
                             <>
-                              {isRegionsLoading && <CircularProgress size={18} />}
+                              {isRegionsLoading && (
+                                <CircularProgress size={18} />
+                              )}
+
                               {params.InputProps.endAdornment}
                             </>
                           )

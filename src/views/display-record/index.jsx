@@ -6,11 +6,9 @@ import {
   useState
 } from 'react';
 import { Formik } from 'formik';
-import * as Yup from 'yup';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  Alert,
   Autocomplete,
   Button,
   CircularProgress,
@@ -26,6 +24,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
@@ -138,36 +137,6 @@ const getInitialRecordId = (...values) => {
   return '';
 };
 
-const getErrorMessage = (error) => {
-  const responseData = error?.response?.data;
-
-  if (typeof responseData === 'string') {
-    return responseData;
-  }
-
-  if (responseData?.message) {
-    return responseData.message;
-  }
-
-  if (responseData?.detail) {
-    return responseData.detail;
-  }
-
-  if (responseData && typeof responseData === 'object') {
-    const firstError = Object.values(responseData)[0];
-
-    if (Array.isArray(firstError)) {
-      return firstError[0];
-    }
-
-    if (typeof firstError === 'string') {
-      return firstError;
-    }
-  }
-
-  return error?.message || 'Something went wrong.';
-};
-
 const SearchableSelectField = ({
   id,
   label,
@@ -255,7 +224,7 @@ const DisplayRecordFormFields = ({
   regionOptions,
   isRegionsLoading,
   selectedRecord,
-  saveError
+  showApiError
 }) => {
   const hydrationRef = useRef({
     record: selectedRecord,
@@ -281,7 +250,9 @@ const DisplayRecordFormFields = ({
 
   const {
     data: storeOptionsData,
-    isFetching: isStoresLoading
+    isFetching: isStoresLoading,
+    isError: isStoresError,
+    error: storesError
   } = useQuery({
     queryKey: ['store-name-list', selectedRegionName],
     queryFn: async () => {
@@ -311,7 +282,9 @@ const DisplayRecordFormFields = ({
 
   const {
     data: tableOptionsData,
-    isFetching: isTableTypesLoading
+    isFetching: isTableTypesLoading,
+    isError: isTableTypesError,
+    error: tableTypesError
   } = useQuery({
     queryKey: [
       'table-name-list',
@@ -349,7 +322,9 @@ const DisplayRecordFormFields = ({
 
   const {
     data: productOptionsData,
-    isFetching: isProductsLoading
+    isFetching: isProductsLoading,
+    isError: isProductsError,
+    error: productsError
   } = useQuery({
     queryKey: [
       'product-name-list',
@@ -390,7 +365,9 @@ const DisplayRecordFormFields = ({
 
   const {
     data: securityOptionsData,
-    isFetching: isSecurityTypesLoading
+    isFetching: isSecurityTypesLoading,
+    isError: isSecurityTypesError,
+    error: securityTypesError
   } = useQuery({
     queryKey: [
       'security-name-list',
@@ -596,6 +573,46 @@ const DisplayRecordFormFields = ({
     setFieldValue
   ]);
 
+  useEffect(() => {
+    if (isStoresError && storesError) {
+      showApiError(storesError);
+    }
+  }, [
+    isStoresError,
+    storesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isTableTypesError && tableTypesError) {
+      showApiError(tableTypesError);
+    }
+  }, [
+    isTableTypesError,
+    tableTypesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isProductsError && productsError) {
+      showApiError(productsError);
+    }
+  }, [
+    isProductsError,
+    productsError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isSecurityTypesError && securityTypesError) {
+      showApiError(securityTypesError);
+    }
+  }, [
+    isSecurityTypesError,
+    securityTypesError,
+    showApiError
+  ]);
+
   const clearFields = (fieldNames) => {
     fieldNames.forEach((fieldName) => {
       setFieldValue(fieldName, '', false);
@@ -605,11 +622,6 @@ const DisplayRecordFormFields = ({
 
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
-      {saveError && (
-        <Alert severity="error">
-          {getErrorMessage(saveError)}
-        </Alert>
-      )}
 
       <SearchableSelectField
         id="display-record-region"
@@ -826,6 +838,25 @@ export default function DisplayRecordsPage() {
   const queryClient = useQueryClient();
   const formikRef = useRef(null);
 
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const showApiError = useCallback(
+    (error) => {
+      const message = error?.response?.data?.message;
+
+      if (!message) {
+        return;
+      }
+
+      enqueueSnackbar(message, {
+        variant: 'error'
+      });
+    },
+    [enqueueSnackbar]
+  );
+
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
@@ -914,7 +945,9 @@ export default function DisplayRecordsPage() {
 
   const {
     data: regionOptionsData,
-    isLoading: isRegionsLoading
+    isLoading: isRegionsLoading,
+    isError: isRegionsError,
+    error: regionsError
   } = useQuery({
     queryKey: ['region-name-list'],
     queryFn: async () => {
@@ -1010,7 +1043,8 @@ export default function DisplayRecordsPage() {
 
       setOpen(false);
       setSelectedRecord(null);
-    }
+    },
+    onError: showApiError
   });
 
   const updateRecordMutation = useMutation({
@@ -1041,7 +1075,8 @@ export default function DisplayRecordsPage() {
 
       setOpen(false);
       setSelectedRecord(null);
-    }
+    },
+    onError: showApiError
   });
 
   const deleteRecordMutation = useMutation({
@@ -1059,7 +1094,8 @@ export default function DisplayRecordsPage() {
 
       setDeleteOpen(false);
       setSelectedRecord(null);
-    }
+    },
+    onError: showApiError
   });
 
   const handleDeleteConfirm = () => {
@@ -1286,9 +1322,21 @@ export default function DisplayRecordsPage() {
     createRecordMutation.isPending ||
     updateRecordMutation.isPending;
 
-  const saveError =
-    createRecordMutation.error ||
-    updateRecordMutation.error;
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
+  useEffect(() => {
+    if (isRegionsError && regionsError) {
+      showApiError(regionsError);
+    }
+  }, [
+    isRegionsError,
+    regionsError,
+    showApiError
+  ]);
 
   return (
     <>
@@ -1298,7 +1346,7 @@ export default function DisplayRecordsPage() {
           <Button
             variant="contained"
             onClick={handleOpenCreate}
-            disabled={isRegionsLoading}
+            disabled={isRegionsLoading || isRegionsError}
           >
             Add Display Record
           </Button>
@@ -1317,15 +1365,8 @@ export default function DisplayRecordsPage() {
             columns={recordColumns}
             rows={records}
             getRowId={(record) => record.id}
-            loading={isLoading}
-            fetching={isFetching}
-            error={
-              isError
-                ? {
-                  message: getErrorMessage(error)
-                }
-                : null
-            }
+            loading={isLoading || isFetching}
+            error={null}
             emptyMessage="No display records found."
             searchValue={search}
             searchPlaceholder="Search display records..."
@@ -1361,13 +1402,6 @@ export default function DisplayRecordsPage() {
             ?
           </Typography>
 
-          {deleteRecordMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {getErrorMessage(
-                deleteRecordMutation.error
-              )}
-            </Alert>
-          )}
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -1434,7 +1468,7 @@ export default function DisplayRecordsPage() {
                   regionOptions={regionOptions}
                   isRegionsLoading={isRegionsLoading}
                   selectedRecord={selectedRecord}
-                  saveError={saveError}
+                  showApiError={showApiError}
                 />
               </form>
             )}
