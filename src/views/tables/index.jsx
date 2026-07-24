@@ -26,9 +26,11 @@ import Typography from '@mui/material/Typography';
 
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 import MainCard from 'ui-component/cards/MainCard';
 import ServerTable from 'ui-component/tables/server-side-custom-table';
+import DescriptionModal from 'ui-component/modals/DescriptionModal';
 
 import useAxios from '../../api/useAxios';
 import tableSchema from './tableSchema';
@@ -40,6 +42,7 @@ export default function TablesPage() {
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [descriptionTable, setDescriptionTable] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -92,6 +95,14 @@ export default function TablesPage() {
     setPage(0);
   }, []);
 
+  const handleOpenDescription = useCallback((table) => {
+    setDescriptionTable(table);
+  }, []);
+
+  const handleCloseDescription = useCallback(() => {
+    setDescriptionTable(null);
+  }, []);
+
   const {
     data,
     isLoading,
@@ -111,7 +122,7 @@ export default function TablesPage() {
         {
           params: {
             page: page + 1,
-            page_size: rowsPerPage,
+            size: rowsPerPage,
             ...(search && { search })
           }
         }
@@ -225,8 +236,25 @@ export default function TablesPage() {
       {
         id: 'description',
         label: 'Description',
-        render: (table) =>
-          table?.description || '-'
+        align: 'center',
+        minWidth: 120,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (table) => (
+          <IconButton
+            size="small"
+            color="primary"
+            disabled={!table?.description}
+            onClick={() => handleOpenDescription(table)}
+            aria-label={`View description for ${table?.name || 'table'}`}
+          >
+            <DescriptionIcon fontSize="small" />
+          </IconButton>
+        )
       },
       {
         id: 'actions',
@@ -257,7 +285,8 @@ export default function TablesPage() {
       page,
       rowsPerPage,
       handleOpenEdit,
-      handleDelete
+      handleDelete,
+      handleOpenDescription
     ]
   );
 
@@ -485,6 +514,13 @@ export default function TablesPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <DescriptionModal
+        open={Boolean(descriptionTable)}
+        onClose={handleCloseDescription}
+        title={`${descriptionTable?.name || 'Table'} Description`}
+        description={descriptionTable?.description}
+      />
     </>
   );
 }

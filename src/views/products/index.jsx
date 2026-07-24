@@ -127,7 +127,7 @@ export default function ProductsPage() {
         {
           params: {
             page: page + 1,
-            page_size: rowsPerPage,
+            size: rowsPerPage,
             ...(search && {
               search
             })

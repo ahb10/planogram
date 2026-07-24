@@ -16,11 +16,13 @@ import Typography from '@mui/material/Typography';
 
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 import MainCard from 'ui-component/cards/MainCard';
 import ServerTable from 'ui-component/tables/server-side-custom-table';
 import regionSchema from './regionSchema';
 import useAxios from 'api/useAxios';
+import DescriptionModal from 'ui-component/modals/DescriptionModal';
 
 export default function RegionPage() {
   const api = useAxios();
@@ -29,10 +31,19 @@ export default function RegionPage() {
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [descriptionRegion, setDescriptionRegion] = useState(null);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchValue, setSearchValue] = useState('');
+
+  const handleOpenDescription = useCallback((region) => {
+    setDescriptionRegion(region);
+  }, []);
+
+  const handleCloseDescription = useCallback(() => {
+    setDescriptionRegion(null);
+  }, []);
 
   const {
     data,
@@ -51,7 +62,7 @@ export default function RegionPage() {
       const response = await api.get('/api/inventory/region-list', {
         params: {
           page: page + 1,
-          page_size: rowsPerPage,
+          size: rowsPerPage,
           ...(searchValue && {
             search: searchValue
           })
@@ -211,7 +222,25 @@ export default function RegionPage() {
       {
         id: 'description',
         label: 'Description',
-        render: (region) => region?.description || '-'
+        align: 'center',
+        minWidth: 120,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (region) => (
+          <IconButton
+            size="small"
+            color="primary"
+            disabled={!region?.description}
+            onClick={() => handleOpenDescription(region)}
+            aria-label={`View description for ${region?.name || 'region'}`}
+          >
+            <DescriptionIcon fontSize="small" />
+          </IconButton>
+        )
       },
       {
         id: 'actions',
@@ -241,7 +270,7 @@ export default function RegionPage() {
         )
       }
     ],
-    [handleDelete, handleOpenEdit]
+    [handleDelete, handleOpenEdit, handleOpenDescription]
   );
 
   const saving =
@@ -485,6 +514,13 @@ export default function RegionPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <DescriptionModal
+        open={Boolean(descriptionRegion)}
+        onClose={handleCloseDescription}
+        title={`${descriptionRegion?.name || 'Region'} Description`}
+        description={descriptionRegion?.description}
+      />
     </>
   );
 }

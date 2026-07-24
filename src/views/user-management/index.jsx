@@ -205,7 +205,7 @@ export default function UserManagementPage() {
         {
           params: {
             page: page + 1,
-            page_size: rowsPerPage,
+            size: rowsPerPage,
             ...(search && { search })
           }
         }

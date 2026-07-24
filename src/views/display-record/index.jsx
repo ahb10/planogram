@@ -901,7 +901,7 @@ export default function DisplayRecordsPage() {
         {
           params: {
             page: page + 1,
-            page_size: rowsPerPage,
+            size: rowsPerPage,
             ...(search && { search })
           }
         }
