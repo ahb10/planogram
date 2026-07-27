@@ -227,21 +227,20 @@ const DisplayRecordFormFields = ({
   showApiError
 }) => {
   const hydrationRef = useRef({
-    record: selectedRecord,
     store: false,
     table_type: false,
     product: false,
     security_type: false
   });
+
   useEffect(() => {
     hydrationRef.current = {
-      record: selectedRecord,
       store: false,
       table_type: false,
       product: false,
       security_type: false
     };
-  }, [selectedRecord]);
+  }, [selectedRecord?.id]);
 
   const selectedRegionName = useMemo(
     () => getOptionName(regionOptions, values.region),
@@ -406,18 +405,11 @@ const DisplayRecordFormFields = ({
 
   useEffect(() => {
     if (
-      !selectedRecord ||
-      hydrationRef.current.store
+      !selectedRecord?.id ||
+      hydrationRef.current.store ||
+      !values.region ||
+      storeOptions.length === 0
     ) {
-      return;
-    }
-
-    if (values.store) {
-      hydrationRef.current.store = true;
-      return;
-    }
-
-    if (!values.region || storeOptions.length === 0) {
       return;
     }
 
@@ -428,33 +420,23 @@ const DisplayRecordFormFields = ({
       selectedRecord?.store
     );
 
-    hydrationRef.current.store = true;
-
-    if (storeId) {
-      setFieldValue('store', storeId, false);
+    if (!storeId) {
+      return;
     }
+
+    hydrationRef.current.store = true;
+    setFieldValue('store', storeId, false);
   }, [
     selectedRecord,
     values.region,
-    values.store,
     storeOptions,
     setFieldValue
   ]);
 
   useEffect(() => {
     if (
-      !selectedRecord ||
-      hydrationRef.current.table_type
-    ) {
-      return;
-    }
-
-    if (values.table_type) {
-      hydrationRef.current.table_type = true;
-      return;
-    }
-
-    if (
+      !selectedRecord?.id ||
+      hydrationRef.current.table_type ||
       !values.region ||
       !values.store ||
       tableTypeOptions.length === 0
@@ -469,34 +451,24 @@ const DisplayRecordFormFields = ({
       selectedRecord?.table_type
     );
 
-    hydrationRef.current.table_type = true;
-
-    if (tableTypeId) {
-      setFieldValue('table_type', tableTypeId, false);
+    if (!tableTypeId) {
+      return;
     }
+
+    hydrationRef.current.table_type = true;
+    setFieldValue('table_type', tableTypeId, false);
   }, [
     selectedRecord,
     values.region,
     values.store,
-    values.table_type,
     tableTypeOptions,
     setFieldValue
   ]);
 
   useEffect(() => {
     if (
-      !selectedRecord ||
-      hydrationRef.current.product
-    ) {
-      return;
-    }
-
-    if (values.product) {
-      hydrationRef.current.product = true;
-      return;
-    }
-
-    if (
+      !selectedRecord?.id ||
+      hydrationRef.current.product ||
       !values.region ||
       !values.store ||
       !values.table_type ||
@@ -512,35 +484,25 @@ const DisplayRecordFormFields = ({
       selectedRecord?.product
     );
 
-    hydrationRef.current.product = true;
-
-    if (productId) {
-      setFieldValue('product', productId, false);
+    if (!productId) {
+      return;
     }
+
+    hydrationRef.current.product = true;
+    setFieldValue('product', productId, false);
   }, [
     selectedRecord,
     values.region,
     values.store,
     values.table_type,
-    values.product,
     productOptions,
     setFieldValue
   ]);
 
   useEffect(() => {
     if (
-      !selectedRecord ||
-      hydrationRef.current.security_type
-    ) {
-      return;
-    }
-
-    if (values.security_type) {
-      hydrationRef.current.security_type = true;
-      return;
-    }
-
-    if (
+      !selectedRecord?.id ||
+      hydrationRef.current.security_type ||
       !values.region ||
       !values.store ||
       !values.table_type ||
@@ -557,18 +519,23 @@ const DisplayRecordFormFields = ({
       selectedRecord?.security_type
     );
 
+    if (!securityTypeId) {
+      return;
+    }
+
     hydrationRef.current.security_type = true;
 
-    if (securityTypeId) {
-      setFieldValue('security_type', securityTypeId, false);
-    }
+    setFieldValue(
+      'security_type',
+      securityTypeId,
+      false
+    );
   }, [
     selectedRecord,
     values.region,
     values.store,
     values.table_type,
     values.product,
-    values.security_type,
     securityTypeOptions,
     setFieldValue
   ]);
@@ -639,7 +606,9 @@ const DisplayRecordFormFields = ({
           hydrationRef.current.table_type = true;
           hydrationRef.current.product = true;
           hydrationRef.current.security_type = true;
+
           setFieldValue('region', nextValue);
+
           clearFields([
             'store',
             'table_type',
@@ -755,6 +724,20 @@ const DisplayRecordFormFields = ({
           value={values.table_number}
           onChange={handleChange}
           onBlur={handleBlur}
+          inputProps={{
+            onWheel: (event) => {
+              event.currentTarget.blur();
+            }
+          }}
+          sx={{
+            '& input[type="number"]': {
+              MozAppearance: 'textfield'
+            },
+            '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
+            {
+              WebkitAppearance: 'none',
+            }
+          }}
         />
 
         {touched.table_number &&
@@ -762,7 +745,7 @@ const DisplayRecordFormFields = ({
             <Typography
               variant="caption"
               color="error"
-              sx={{ mt: 0.5 }}
+              sx={{ mt: 0.5, marginLeft: 2 }}
             >
               {errors.table_number}
             </Typography>
@@ -787,13 +770,27 @@ const DisplayRecordFormFields = ({
           value={values.quantity}
           onChange={handleChange}
           onBlur={handleBlur}
+          inputProps={{
+            onWheel: (event) => {
+              event.currentTarget.blur();
+            }
+          }}
+          sx={{
+            '& input[type="number"]': {
+              MozAppearance: 'textfield'
+            },
+            '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
+            {
+              WebkitAppearance: 'none',
+            }
+          }}
         />
 
         {touched.quantity && errors.quantity && (
           <Typography
             variant="caption"
             color="error"
-            sx={{ mt: 0.5 }}
+            sx={{ mt: 0.5, marginLeft: 2 }}
           >
             {errors.quantity}
           </Typography>
@@ -843,7 +840,7 @@ export default function DisplayRecordsPage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.message;
+      const message = error?.response?.data?.errors?.name[0];
 
       if (!message) {
         return;
@@ -870,10 +867,35 @@ export default function DisplayRecordsPage() {
     setOpen(true);
   }, []);
 
-  const handleOpenEdit = useCallback((record) => {
-    setSelectedRecord(record);
-    setOpen(true);
-  }, []);
+  const [isEditLoading, setIsEditLoading] = useState(false);
+
+  const handleOpenEdit = useCallback(
+    async (record) => {
+      console.log(record,"recordrecord")
+      if (!record?.id) {
+        return;
+      }
+
+      try {
+        setIsEditLoading(true);
+
+        const response = await api.get(
+          `/api/inventory/record-detail/${record.id}`
+        );
+
+        const recordDetail =
+          response.data?.data ?? []
+
+        setSelectedRecord(recordDetail);
+        setOpen(true);
+      } catch (error) {
+        showApiError(error);
+      } finally {
+        setIsEditLoading(false);
+      }
+    },
+    [api, showApiError]
+  );
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -981,32 +1003,16 @@ export default function DisplayRecordsPage() {
 
   const initialValues = useMemo(
     () => ({
-      region:
-        getInitialRecordId(
-          selectedRecord?.region_id,
-          selectedRecord?.region
-        ) ||
-        getOptionId(
-          regionOptions,
-          selectedRecord?.region_name ??
-          selectedRecord?.region
-        ),
-      store: getInitialRecordId(
-        selectedRecord?.store_id,
-        selectedRecord?.store
+      region: getOptionId(
+        regionOptions,
+        selectedRecord?.region_id ??
+        selectedRecord?.region_name ??
+        selectedRecord?.region
       ),
-      table_type: getInitialRecordId(
-        selectedRecord?.table_type_id,
-        selectedRecord?.table_type
-      ),
-      product: getInitialRecordId(
-        selectedRecord?.product_id,
-        selectedRecord?.product
-      ),
-      security_type: getInitialRecordId(
-        selectedRecord?.security_type_id,
-        selectedRecord?.security_type
-      ),
+      store: '',
+      table_type: '',
+      product: '',
+      security_type: '',
       table_number: selectedRecord?.table_number ?? '',
       quantity: selectedRecord?.quantity ?? 1,
       keyboard: selectedRecord?.keyboard ?? '',

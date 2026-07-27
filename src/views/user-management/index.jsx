@@ -103,7 +103,7 @@ export default function UserManagementPage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.message;
+      const message = error?.response?.data?.errors?.name[0];
 
       if (!message) {
         return;

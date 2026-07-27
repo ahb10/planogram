@@ -1356,3 +1356,24 @@
     }
   }
 }
+
+.de-selected-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.de-selected-pill-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.de-selected-pill-remove:hover {
+  background: rgba(0, 0, 0, 0.08);
+}

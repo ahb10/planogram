@@ -14,7 +14,7 @@ const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')))
 // const UtilsColor = Loadable(lazy(() => import('views/utilities/Color')));
 // const UtilsShadow = Loadable(lazy(() => import('views/utilities/Shadow')));
 
-// region routing
+// admin routing
 const RegionPage = Loadable(lazy(() => import('views/region')));
 const StorePage = Loadable(lazy(() => import('views/store')));
 const BrandsPage = Loadable(lazy(() => import('views/brands')));
@@ -23,6 +23,11 @@ const CategoryPage = Loadable(lazy(() => import('views/category')));
 const SecurityTypePage = Loadable(lazy(() => import('views/security-types')));
 const DisplayRecordsPage = Loadable(lazy(() => import('views/display-record')));
 const UserManagementPage = Loadable(lazy(() => import('views/user-management')));
+const AdminChangeRequest = Loadable(lazy(() => import('views/admin-change-request')));
+
+
+// user routing
+const ChangeRequestPage = Loadable(lazy(() => import('views/change-request')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -82,6 +87,17 @@ const MainRoutes = {
     {
       path: 'user-management',
       element: <UserManagementPage />
+    },
+    {
+      path: 'admin-change-request',
+      element: <AdminChangeRequest />
+    },
+
+    // user routing
+
+    {
+      path: 'change-request',
+      element: <ChangeRequestPage />
     },
   ]
 };

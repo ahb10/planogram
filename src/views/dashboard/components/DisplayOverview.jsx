@@ -154,7 +154,7 @@ const buildOverviewData = (summaryResponse) => {
       store_count:
         Number(region?.store_count) ||
         regionStores.length,
-      unit_count: regionUnits
+      unit_count: Number(region?.unit_count) || 0,
     };
   });
 

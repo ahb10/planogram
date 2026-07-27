@@ -166,7 +166,7 @@ export default function StorePage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.message;
+      const message = error?.response?.data?.errors?.name[0];
 
       if (!message) {
         return;
@@ -617,7 +617,7 @@ export default function StorePage() {
     } catch (error) {
       console.error('Delete image error:', {
         message: error?.message,
-        data: error?.response?.data
+        data: error?.response?.data?.errors?.name[0] || "Something went wrong"
       });
     }
   };

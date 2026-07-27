@@ -794,6 +794,40 @@ const DisplayExplorer = ({
     );
   };
 
+  const handleRemoveRegionPill = (regionValue) => {
+    setSelectedRegions((currentRegions) =>
+      currentRegions.filter(
+        (value) => value !== regionValue
+      )
+    );
+
+    setFilterRequestVersion(
+      (currentVersion) => currentVersion + 1
+    );
+  };
+
+  const handleRemoveTableTypePill = (tableTypeValue) => {
+    setSelectedTableTypes((currentTableTypes) =>
+      currentTableTypes.filter(
+        (value) => value !== tableTypeValue
+      )
+    );
+
+    setFilterRequestVersion(
+      (currentVersion) => currentVersion + 1
+    );
+  };
+
+  const handleClearStorePill = () => {
+    setSelectedStores(
+      storeOptions.map((option) => option.value)
+    );
+
+    setFilterRequestVersion(
+      (currentVersion) => currentVersion + 1
+    );
+  };
+
   return (
     <div className="display-explorer-page">
       <nav className="de-tabs">
@@ -913,29 +947,56 @@ const DisplayExplorer = ({
                     key={`region-${region.value}`}
                     className="de-selected-filter-pill"
                   >
-                    {region.label}
+                    <span>{region.label}</span>
+
+                    <ButtonBase
+                      className="de-selected-pill-remove"
+                      onClick={() =>
+                        handleRemoveRegionPill(region.value)
+                      }
+                      aria-label={`Remove ${region.label} region`}
+                    >
+                      <ClearIcon fontSize="inherit" />
+                    </ButtonBase>
                   </span>
                 ))}
 
                 {showStoreCountPill && (
                   <span className="de-selected-filter-pill">
-                    {selectedStoreCount}{' '}
-                    {selectedStoreCount === 1
-                      ? 'Store'
-                      : 'Stores'}
+                    <span>
+                      Stores: {selectedStoreCount}
+                    </span>
+
+                    <ButtonBase
+                      className="de-selected-pill-remove"
+                      onClick={handleClearStorePill}
+                      aria-label="Select all stores"
+                    >
+                      <ClearIcon fontSize="inherit" />
+                    </ButtonBase>
                   </span>
                 )}
 
-                {selectedTableTypePills.map(
-                  (tableType) => (
-                    <span
-                      key={`table-type-${tableType.value}`}
-                      className="de-selected-filter-pill"
+                {selectedTableTypePills.map((tableType) => (
+                  <span
+                    key={`table-type-${tableType.value}`}
+                    className="de-selected-filter-pill"
+                  >
+                    <span>{tableType.label}</span>
+
+                    <ButtonBase
+                      className="de-selected-pill-remove"
+                      onClick={() =>
+                        handleRemoveTableTypePill(
+                          tableType.value
+                        )
+                      }
+                      aria-label={`Remove ${tableType.label} table type`}
                     >
-                      {tableType.label}
-                    </span>
-                  )
-                )}
+                      <ClearIcon fontSize="inherit" />
+                    </ButtonBase>
+                  </span>
+                ))}
               </div>
             )}
 

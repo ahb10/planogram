@@ -1,6 +1,6 @@
 // assets
 import DashboardIcon from '@mui/icons-material/Dashboard';
-
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
 const userDashboard = {
@@ -9,12 +9,20 @@ const userDashboard = {
   type: 'group',
   children: [
     {
-      id: 'default',
+      id: 'dashboard',
       title: 'Dashboard',
       type: 'item',
       url: '/',
       icon: DashboardIcon,
       breadcrumbs: false
+    },
+    {
+      id: 'request',
+      title: 'Change Request',
+      type: 'item',
+      url: '/change-request',
+      icon: PlaylistAddIcon,
+      breadcrumbs: true
     },
   ]
 };

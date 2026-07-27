@@ -9,6 +9,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import StorageIcon from '@mui/icons-material/Storage';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
@@ -98,6 +99,14 @@ const dashboard = {
       type: 'item',
       url: '/user-management',
       icon: ManageAccountsIcon,
+      breadcrumbs: true
+    },
+    {
+      id: 'admin-change-request',
+      title: 'Listing',
+      type: 'item',
+      url: '/admin-change-request',
+      icon: FormatListBulletedIcon,
       breadcrumbs: true
     },
   ]

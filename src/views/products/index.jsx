@@ -66,7 +66,7 @@ export default function ProductsPage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.message;
+      const message = error?.response?.data?.errors?.name[0];
 
       if (!message) {
         return;
@@ -781,6 +781,20 @@ export default function ProductsPage() {
                       value={values.price}
                       onChange={handleChange}
                       onBlur={handleBlur}
+                      inputProps={{
+                        onWheel: (event) => {
+                          event.currentTarget.blur();
+                        }
+                      }}
+                      sx={{
+                        '& input[type="number"]': {
+                          MozAppearance: 'textfield'
+                        },
+                        '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
+                        {
+                          WebkitAppearance: 'none',
+                        }
+                      }}
                     />
 
                     {touched.price &&
@@ -814,6 +828,20 @@ export default function ProductsPage() {
                       value={values.stock}
                       onChange={handleChange}
                       onBlur={handleBlur}
+                      inputProps={{
+                        onWheel: (event) => {
+                          event.currentTarget.blur();
+                        }
+                      }}
+                      sx={{
+                        '& input[type="number"]': {
+                          MozAppearance: 'textfield'
+                        },
+                        '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
+                        {
+                          WebkitAppearance: 'none',
+                        }
+                      }}
                     />
 
                     {touched.stock &&

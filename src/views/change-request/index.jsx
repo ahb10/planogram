@@ -1,0 +1,1058 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
+
+import { Formik } from 'formik';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient
+} from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
+
+import {
+  Autocomplete,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  Stack,
+  TextField,
+  Typography
+} from '@mui/material';
+
+import MainCard from 'ui-component/cards/MainCard';
+import ServerTable from 'ui-component/tables/server-side-custom-table';
+
+import useAxios from '../../api/useAxios';
+import requestSchema from './requestSchema';
+import { formatDate } from 'utils/helper-function';
+
+const getListFromResponse = (responseData) => {
+  if (Array.isArray(responseData)) {
+    return responseData;
+  }
+
+  if (Array.isArray(responseData?.results)) {
+    return responseData.results;
+  }
+
+  if (Array.isArray(responseData?.data)) {
+    return responseData.data;
+  }
+
+  if (Array.isArray(responseData?.data?.results)) {
+    return responseData.data.results;
+  }
+
+  return [];
+};
+
+const getOptionName = (options, currentValue) => {
+  if (
+    currentValue === null ||
+    currentValue === undefined ||
+    currentValue === ''
+  ) {
+    return '';
+  }
+
+  const selectedOption = options.find(
+    (option) => String(option?.id) === String(currentValue)
+  );
+
+  return selectedOption
+    ? String(selectedOption?.name ?? selectedOption?.value ?? '')
+    : '';
+};
+
+const getApiErrorMessage = (error) => {
+  const responseData = error?.response?.data?.errors?.name[0] || "Something went wrong. Please try again.";
+
+  if (responseData) {
+    return responseData.message;
+  }
+
+  return 'Something went wrong. Please try again.';
+};
+
+const getStatusColor = (status) => {
+  switch (String(status || '').toLowerCase()) {
+    case 'approved':
+      return 'success';
+    case 'rejected':
+      return 'error';
+    case 'pending':
+      return 'warning';
+    default:
+      return 'default';
+  }
+};
+
+const getDisplayRecordLabel = (record) => {
+  const parts = [
+    record?.product_name,
+    record?.product_sku
+      ? `SKU: ${record.product_sku}`
+      : '',
+    record?.table_number !== null &&
+      record?.table_number !== undefined
+      ? `Table: ${record.table_number}`
+      : '',
+    record?.security_type_name
+  ].filter(Boolean);
+
+  return parts.length > 0
+    ? parts.join(' | ')
+    : `Display Record #${record?.id}`;
+};
+
+const SearchableSelectField = ({
+  id,
+  label,
+  name,
+  value,
+  options,
+  error,
+  touched,
+  loading,
+  disabled = false,
+  setFieldValue,
+  setFieldTouched,
+  onValueChange,
+  noOptionsText = 'No options found'
+}) => {
+  const selectedOption =
+    options.find(
+      (option) => String(option?.id) === String(value)
+    ) || null;
+
+  return (
+    <Autocomplete
+      id={id}
+      options={options}
+      value={selectedOption}
+      loading={loading}
+      disabled={disabled || loading}
+      autoHighlight
+      clearOnEscape
+      noOptionsText={noOptionsText}
+      isOptionEqualToValue={(option, selectedValue) =>
+        String(option?.id) === String(selectedValue?.id)
+      }
+      getOptionLabel={(option) =>
+        String(option?.name || '')
+      }
+      onChange={(_, selectedValue) => {
+        const nextValue =
+          selectedValue?.id !== undefined
+            ? String(selectedValue.id)
+            : '';
+
+        if (onValueChange) {
+          onValueChange(nextValue);
+          return;
+        }
+
+        setFieldValue(name, nextValue);
+      }}
+      onBlur={() => {
+        setFieldTouched(name, true);
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          name={name}
+          label={label}
+          error={Boolean(touched && error)}
+          helperText={touched && error ? error : ''}
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <>
+                {loading ? (
+                  <CircularProgress size={18} />
+                ) : null}
+
+                {params.InputProps.endAdornment}
+              </>
+            )
+          }}
+        />
+      )}
+    />
+  );
+};
+
+const ChangeRequestFormFields = ({
+  api,
+  values,
+  errors,
+  touched,
+  handleChange,
+  handleBlur,
+  setFieldValue,
+  setFieldTouched,
+  regionOptions,
+  isRegionsLoading,
+  showApiError
+}) => {
+  const selectedRegionName = useMemo(
+    () => getOptionName(regionOptions, values.region),
+    [regionOptions, values.region]
+  );
+
+  const {
+    data: storeOptionsData,
+    isFetching: isStoresLoading,
+    isError: isStoresError,
+    error: storesError
+  } = useQuery({
+    queryKey: ['request-store-name-list', selectedRegionName],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/store-name-list',
+        {
+          params: {
+            region: selectedRegionName
+          }
+        }
+      );
+
+      return response.data;
+    },
+    enabled: Boolean(selectedRegionName)
+  });
+
+  const storeOptions = useMemo(
+    () => getListFromResponse(storeOptionsData),
+    [storeOptionsData]
+  );
+
+  const selectedStoreName = useMemo(
+    () => getOptionName(storeOptions, values.store),
+    [storeOptions, values.store]
+  );
+
+  const {
+    data: tableOptionsData,
+    isFetching: isTableTypesLoading,
+    isError: isTableTypesError,
+    error: tableTypesError
+  } = useQuery({
+    queryKey: [
+      'request-table-name-list',
+      selectedRegionName,
+      selectedStoreName
+    ],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/table-name-list',
+        {
+          params: {
+            region: selectedRegionName,
+            store: selectedStoreName
+          }
+        }
+      );
+
+      return response.data;
+    },
+    enabled: Boolean(
+      selectedRegionName &&
+      selectedStoreName
+    )
+  });
+
+  const tableTypeOptions = useMemo(
+    () => getListFromResponse(tableOptionsData),
+    [tableOptionsData]
+  );
+
+  const selectedTableTypeName = useMemo(
+    () => getOptionName(tableTypeOptions, values.table_type),
+    [tableTypeOptions, values.table_type]
+  );
+
+  const {
+    data: productOptionsData,
+    isFetching: isProductsLoading,
+    isError: isProductsError,
+    error: productsError
+  } = useQuery({
+    queryKey: [
+      'request-product-name-list',
+      selectedRegionName,
+      selectedStoreName,
+      selectedTableTypeName
+    ],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/product-name-list',
+        {
+          params: {
+            region: selectedRegionName,
+            store: selectedStoreName,
+            table_type: selectedTableTypeName
+          }
+        }
+      );
+
+      return response.data;
+    },
+    enabled: Boolean(
+      selectedRegionName &&
+      selectedStoreName &&
+      selectedTableTypeName
+    )
+  });
+
+  const productOptions = useMemo(
+    () => getListFromResponse(productOptionsData),
+    [productOptionsData]
+  );
+
+  const selectedProductName = useMemo(
+    () => getOptionName(productOptions, values.product),
+    [productOptions, values.product]
+  );
+
+  const {
+    data: securityOptionsData,
+    isFetching: isSecurityTypesLoading,
+    isError: isSecurityTypesError,
+    error: securityTypesError
+  } = useQuery({
+    queryKey: [
+      'request-security-name-list',
+      selectedRegionName,
+      selectedStoreName,
+      selectedTableTypeName,
+      selectedProductName
+    ],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/security-name-list',
+        {
+          params: {
+            region: selectedRegionName,
+            store: selectedStoreName,
+            table_type: selectedTableTypeName,
+            product: selectedProductName
+          }
+        }
+      );
+
+      return response.data;
+    },
+    enabled: Boolean(
+      selectedRegionName &&
+      selectedStoreName &&
+      selectedTableTypeName &&
+      selectedProductName
+    )
+  });
+
+  const securityTypeOptions = useMemo(
+    () => getListFromResponse(securityOptionsData),
+    [securityOptionsData]
+  );
+
+  const selectedSecurityTypeName = useMemo(
+    () =>
+      getOptionName(
+        securityTypeOptions,
+        values.security_type
+      ),
+    [securityTypeOptions, values.security_type]
+  );
+
+  const {
+    data: displayRecordOptionsData,
+    isFetching: isDisplayRecordsLoading,
+    isError: isDisplayRecordsError,
+    error: displayRecordsError
+  } = useQuery({
+    queryKey: [
+      'request-display-record-options',
+      selectedRegionName,
+      selectedStoreName,
+      selectedTableTypeName,
+      selectedProductName,
+      selectedSecurityTypeName
+    ],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/record-name-list',
+        {
+          params: {
+            region: selectedRegionName,
+            store: selectedStoreName,
+            table_type: selectedTableTypeName,
+            product: selectedProductName,
+            security_type: selectedSecurityTypeName
+          }
+        }
+      );
+
+      return response.data;
+    },
+    enabled: Boolean(
+      selectedRegionName &&
+      selectedStoreName &&
+      selectedTableTypeName &&
+      selectedProductName &&
+      selectedSecurityTypeName
+    )
+  });
+
+  const displayRecordOptions = useMemo(
+    () =>
+      getListFromResponse(displayRecordOptionsData).map(
+        (record) => ({
+          id: record.id,
+          name: getDisplayRecordLabel(record),
+          record
+        })
+      ),
+    [displayRecordOptionsData]
+  );
+
+  useEffect(() => {
+    if (isStoresError && storesError) {
+      showApiError(storesError);
+    }
+  }, [
+    isStoresError,
+    storesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isTableTypesError && tableTypesError) {
+      showApiError(tableTypesError);
+    }
+  }, [
+    isTableTypesError,
+    tableTypesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isProductsError && productsError) {
+      showApiError(productsError);
+    }
+  }, [
+    isProductsError,
+    productsError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isSecurityTypesError && securityTypesError) {
+      showApiError(securityTypesError);
+    }
+  }, [
+    isSecurityTypesError,
+    securityTypesError,
+    showApiError
+  ]);
+
+  useEffect(() => {
+    if (isDisplayRecordsError && displayRecordsError) {
+      showApiError(displayRecordsError);
+    }
+  }, [
+    isDisplayRecordsError,
+    displayRecordsError,
+    showApiError
+  ]);
+
+  const clearFields = (fieldNames) => {
+    fieldNames.forEach((fieldName) => {
+      setFieldValue(fieldName, '', false);
+      setFieldTouched(fieldName, false, false);
+    });
+  };
+
+  return (
+    <Stack spacing={2} sx={{ mt: 1 }}>
+      <SearchableSelectField
+        id="change-request-region"
+        name="region"
+        label="Region"
+        value={values.region}
+        options={regionOptions}
+        loading={isRegionsLoading}
+        touched={touched.region}
+        error={errors.region}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        onValueChange={(nextValue) => {
+          setFieldValue('region', nextValue);
+          clearFields([
+            'store',
+            'table_type',
+            'product',
+            'security_type',
+            'display_record'
+          ]);
+        }}
+      />
+
+      <SearchableSelectField
+        id="change-request-store"
+        name="store"
+        label="Store"
+        value={values.store}
+        options={storeOptions}
+        loading={isStoresLoading}
+        disabled={!values.region}
+        touched={touched.store}
+        error={errors.store}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        onValueChange={(nextValue) => {
+          setFieldValue('store', nextValue);
+          clearFields([
+            'table_type',
+            'product',
+            'security_type',
+            'display_record'
+          ]);
+        }}
+      />
+
+      <SearchableSelectField
+        id="change-request-table-type"
+        name="table_type"
+        label="Table Type"
+        value={values.table_type}
+        options={tableTypeOptions}
+        loading={isTableTypesLoading}
+        disabled={!values.region || !values.store}
+        touched={touched.table_type}
+        error={errors.table_type}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        onValueChange={(nextValue) => {
+          setFieldValue('table_type', nextValue);
+          clearFields([
+            'product',
+            'security_type',
+            'display_record'
+          ]);
+        }}
+      />
+
+      <SearchableSelectField
+        id="change-request-product"
+        name="product"
+        label="Product"
+        value={values.product}
+        options={productOptions}
+        loading={isProductsLoading}
+        disabled={
+          !values.region ||
+          !values.store ||
+          !values.table_type
+        }
+        touched={touched.product}
+        error={errors.product}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        onValueChange={(nextValue) => {
+          setFieldValue('product', nextValue);
+          clearFields([
+            'security_type',
+            'display_record'
+          ]);
+        }}
+      />
+
+      <SearchableSelectField
+        id="change-request-security-type"
+        name="security_type"
+        label="Security Type"
+        value={values.security_type}
+        options={securityTypeOptions}
+        loading={isSecurityTypesLoading}
+        disabled={
+          !values.region ||
+          !values.store ||
+          !values.table_type ||
+          !values.product
+        }
+        touched={touched.security_type}
+        error={errors.security_type}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        onValueChange={(nextValue) => {
+          setFieldValue('security_type', nextValue);
+          clearFields(['display_record']);
+        }}
+      />
+
+      <SearchableSelectField
+        id="change-request-display-record"
+        name="display_record"
+        label="Display Record"
+        value={values.display_record}
+        options={displayRecordOptions}
+        loading={isDisplayRecordsLoading}
+        disabled={
+          !values.region ||
+          !values.store ||
+          !values.table_type ||
+          !values.product ||
+          !values.security_type
+        }
+        touched={touched.display_record}
+        error={errors.display_record}
+        setFieldValue={setFieldValue}
+        setFieldTouched={setFieldTouched}
+        noOptionsText="No display records found"
+      />
+
+      <FormControl fullWidth>
+        <TextField
+          id="change-request-description"
+          name="description"
+          label="Description"
+          multiline
+          minRows={4}
+          value={values.description}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={Boolean(
+            touched.description &&
+            errors.description
+          )}
+          helperText={
+            touched.description &&
+              errors.description
+              ? errors.description
+              : ''
+          }
+        />
+      </FormControl>
+    </Stack>
+  );
+};
+
+export default function ChangeRequestsPage() {
+  const api = useAxios();
+  const queryClient = useQueryClient();
+  const formikRef = useRef(null);
+  const { enqueueSnackbar } = useSnackbar();
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const showApiError = useCallback(
+    (error) => {
+      enqueueSnackbar(getApiErrorMessage(error), {
+        variant: 'error',
+        preventDuplicate: true
+      });
+    },
+    [enqueueSnackbar]
+  );
+
+  const handleOpenCreate = useCallback(() => {
+    setOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  const handleTableSearchChange = useCallback(
+    (value) => {
+      const normalizedValue = String(value || '').trim();
+
+      setSearch((previousSearch) => {
+        if (previousSearch === normalizedValue) {
+          return previousSearch;
+        }
+
+        setPage(0);
+        return normalizedValue;
+      });
+    },
+    []
+  );
+
+  const handleTablePageChange = useCallback((newPage) => {
+    setPage(newPage);
+  }, []);
+
+  const handleRowsPerPageChange = useCallback(
+    (newRowsPerPage) => {
+      setRowsPerPage(newRowsPerPage);
+      setPage(0);
+    },
+    []
+  );
+
+  const {
+    data: requestData,
+    isLoading,
+    isFetching,
+    isError,
+    error
+  } = useQuery({
+    queryKey: [
+      'change-request-list',
+      page,
+      rowsPerPage,
+      search
+    ],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/request-list',
+        {
+          params: {
+            page: page + 1,
+            size: rowsPerPage,
+            ...(search && { search })
+          }
+        }
+      );
+
+      return response.data;
+    },
+    placeholderData: (previousData) => previousData
+  });
+
+  const {
+    data: regionOptionsData,
+    isLoading: isRegionsLoading,
+    isError: isRegionsError,
+    error: regionsError
+  } = useQuery({
+    queryKey: ['request-region-name-list'],
+    queryFn: async () => {
+      const response = await api.get(
+        '/api/inventory/region-name-list'
+      );
+
+      return response.data;
+    }
+  });
+
+  const requests = useMemo(
+    () => getListFromResponse(requestData),
+    [requestData]
+  );
+
+  const regionOptions = useMemo(
+    () => getListFromResponse(regionOptionsData),
+    [regionOptionsData]
+  );
+
+  const totalRequests = Number(requestData?.count || 0);
+
+  useEffect(() => {
+    const totalPages = Number(
+      requestData?.total_pages || 0
+    );
+
+    if (totalPages > 0 && page >= totalPages) {
+      setPage(Math.max(totalPages - 1, 0));
+    }
+  }, [requestData?.total_pages, page]);
+
+  const createRequestMutation = useMutation({
+    mutationFn: async (values) => {
+      const payload = {
+        display_record: Number(values.display_record),
+        description: values.description.trim()
+      };
+
+      const response = await api.post(
+        '/api/inventory/create-request',
+        payload
+      );
+
+      return response.data;
+    },
+    onSuccess: (responseData) => {
+      queryClient.invalidateQueries({
+        queryKey: ['change-request-list']
+      });
+
+      enqueueSnackbar(
+        responseData?.message ||
+        'Change request created successfully.',
+        {
+          variant: 'success',
+          preventDuplicate: true
+        }
+      );
+
+      setOpen(false);
+    },
+    onError: showApiError
+  });
+
+  const requestColumns = useMemo(
+    () => [
+      {
+        id: 'request_id',
+        label: 'Request ID',
+        minWidth: 130,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (request) =>
+          request?.request_id || '-'
+      },
+      {
+        id: 'user_name',
+        label: 'Requested By',
+        minWidth: 150,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (request) =>
+          request?.user_name || '-'
+      },
+      {
+        id: 'store_name',
+        label: 'Store',
+        minWidth: 170,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (request) =>
+          request?.store_name || '-'
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        minWidth: 320,
+        width: 320,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          minWidth: 320,
+          width: 320,
+          whiteSpace: 'normal'
+        },
+        render: (request) => (
+          <Typography
+            variant="body2"
+            title={request?.description || ''}
+            sx={{
+              display: '-webkit-box',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 2,
+              overflow: 'hidden',
+              lineHeight: 1.5,
+              whiteSpace: 'normal',
+              overflowWrap: 'break-word'
+            }}
+          >
+            {request?.description || '-'}
+          </Typography>
+        )
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        minWidth: 110,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (request) => (
+          <Chip
+            size="small"
+            label={request?.status || 'Pending'}
+            color={getStatusColor(request?.status)}
+            variant="outlined"
+          />
+        )
+      },
+      {
+        id: 'created_at',
+        label: 'Created At',
+        minWidth: 140,
+        sx: {
+          whiteSpace: 'nowrap'
+        },
+        cellSx: {
+          whiteSpace: 'nowrap'
+        },
+        render: (request) =>
+          formatDate(request?.created_at)
+      }
+    ],
+    []
+  );
+
+  useEffect(() => {
+    if (isError && error) {
+      showApiError(error);
+    }
+  }, [isError, error, showApiError]);
+
+  useEffect(() => {
+    if (isRegionsError && regionsError) {
+      showApiError(regionsError);
+    }
+  }, [
+    isRegionsError,
+    regionsError,
+    showApiError
+  ]);
+
+  return (
+    <>
+      <MainCard
+        title="Change Requests"
+        secondary={
+          <Button
+            variant="contained"
+            onClick={handleOpenCreate}
+            disabled={isRegionsLoading || isRegionsError}
+          >
+            Create Request
+          </Button>
+        }
+      >
+        <Stack spacing={2}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+          >
+            Submit and track requests for changes to display
+            records.
+          </Typography>
+
+          <ServerTable
+            columns={requestColumns}
+            rows={requests}
+            getRowId={(request) => request.id}
+            loading={isLoading || isFetching}
+            error={null}
+            emptyMessage="No change requests found."
+            searchValue={search}
+            searchPlaceholder="Search requests..."
+            onSearchChange={handleTableSearchChange}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            totalCount={totalRequests}
+            onPageChange={handleTablePageChange}
+            onRowsPerPageChange={
+              handleRowsPerPageChange
+            }
+          />
+        </Stack>
+      </MainCard>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Change Request</DialogTitle>
+
+        <DialogContent>
+          <Formik
+            innerRef={formikRef}
+            initialValues={{
+              region: '',
+              store: '',
+              table_type: '',
+              product: '',
+              security_type: '',
+              display_record: '',
+              description: ''
+            }}
+            validationSchema={requestSchema}
+            onSubmit={(values) => {
+              createRequestMutation.mutate(values);
+            }}
+          >
+            {({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              setFieldValue,
+              setFieldTouched,
+              handleSubmit
+            }) => (
+              <form onSubmit={handleSubmit}>
+                <ChangeRequestFormFields
+                  api={api}
+                  values={values}
+                  errors={errors}
+                  touched={touched}
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                  setFieldValue={setFieldValue}
+                  setFieldTouched={setFieldTouched}
+                  regionOptions={regionOptions}
+                  isRegionsLoading={isRegionsLoading}
+                  showApiError={showApiError}
+                />
+              </form>
+            )}
+          </Formik>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleClose}
+            disabled={createRequestMutation.isPending}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={() =>
+              formikRef.current?.submitForm()
+            }
+            disabled={
+              createRequestMutation.isPending ||
+              isRegionsLoading
+            }
+          >
+            {createRequestMutation.isPending
+              ? 'Submitting...'
+              : 'Submit Request'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
