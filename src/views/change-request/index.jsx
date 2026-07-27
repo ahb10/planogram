@@ -24,10 +24,14 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  IconButton,
   Stack,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material';
+
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import MainCard from 'ui-component/cards/MainCard';
 import ServerTable from 'ui-component/tables/server-side-custom-table';
@@ -35,6 +39,7 @@ import ServerTable from 'ui-component/tables/server-side-custom-table';
 import useAxios from '../../api/useAxios';
 import requestSchema from './requestSchema';
 import { formatDate } from 'utils/helper-function';
+import DescriptionModal from 'ui-component/modals/DescriptionModal';
 
 const getListFromResponse = (responseData) => {
   if (Array.isArray(responseData)) {
@@ -658,6 +663,7 @@ export default function ChangeRequestsPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const showApiError = useCallback(
     (error) => {
@@ -675,6 +681,14 @@ export default function ChangeRequestsPage() {
 
   const handleClose = useCallback(() => {
     setOpen(false);
+  }, []);
+
+  const handleOpenRequestDetails = useCallback((request) => {
+    setSelectedRequest(request);
+  }, []);
+
+  const handleCloseRequestDetails = useCallback(() => {
+    setSelectedRequest(null);
   }, []);
 
   const handleTableSearchChange = useCallback(
@@ -848,34 +862,29 @@ export default function ChangeRequestsPage() {
           request?.store_name || '-'
       },
       {
-        id: 'description',
-        label: 'Description',
-        minWidth: 320,
-        width: 320,
+        id: 'request_details',
+        label: 'Details',
+        minWidth: 100,
         sx: {
           whiteSpace: 'nowrap'
         },
         cellSx: {
-          minWidth: 320,
-          width: 320,
-          whiteSpace: 'normal'
+          whiteSpace: 'nowrap',
         },
         render: (request) => (
-          <Typography
-            variant="body2"
-            title={request?.description || ''}
-            sx={{
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 2,
-              overflow: 'hidden',
-              lineHeight: 1.5,
-              whiteSpace: 'normal',
-              overflowWrap: 'break-word'
-            }}
-          >
-            {request?.description || '-'}
-          </Typography>
+          <Tooltip title="View description and rejection reason">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() =>
+                handleOpenRequestDetails(request)
+              }
+              aria-label={`View details for ${request?.request_id || 'request'
+                }`}
+            >
+              <VisibilityOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         )
       },
       {
@@ -911,7 +920,7 @@ export default function ChangeRequestsPage() {
           formatDate(request?.created_at)
       }
     ],
-    []
+    [handleOpenRequestDetails]
   );
 
   useEffect(() => {
@@ -974,6 +983,18 @@ export default function ChangeRequestsPage() {
           />
         </Stack>
       </MainCard>
+
+      <DescriptionModal
+        open={Boolean(selectedRequest)}
+        onClose={handleCloseRequestDetails}
+        title={
+          selectedRequest?.request_id
+            ? `Request ${selectedRequest.request_id}`
+            : 'Request Details'
+        }
+        description={selectedRequest?.description}
+        rejectionReason={selectedRequest?.rejection_reason}
+      />
 
       <Dialog
         open={open}

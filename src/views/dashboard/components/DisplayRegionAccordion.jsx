@@ -12,85 +12,151 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import ClearIcon from '@mui/icons-material/Clear';
+import PostAddOutlinedIcon from '@mui/icons-material/PostAddOutlined';
 
 import { useState } from "react";
 import { useSnackbar } from "notistack";
 import useAxios from "api/useAxios";
+import CreateRequestDialog from "./CreateRequestDialog";
+import useAppStore from "store/appStore";
 
 
 const SkuTable = ({ records }) => {
+
+  const { userType } = useAppStore();
+
+  const [selectedRecord, setSelectedRecord] =
+    useState(null);
+
+  const handleCloseCreateRequest = () => {
+    setSelectedRecord(null);
+  };
+
   return (
-    <div className="de-table-scroll">
-      <table className="de-sku-table">
-        <colgroup>
-          <col className="de-description-column" />
-          <col className="de-code-column" />
-          <col className="de-qty-column" />
-          <col className="de-type-column" />
-          <col className="de-number-column" />
-          <col className="de-security-column" />
-        </colgroup>
+    <>
+      <div className="de-table-scroll">
+        <table className="de-sku-table">
+          <colgroup>
+            <col className="de-description-column" />
+            <col className="de-code-column" />
+            <col className="de-qty-column" />
+            <col className="de-type-column" />
+            <col className="de-number-column" />
+            <col className="de-security-column" />
+            {userType !== "admin" && <col style={{ width: 130 }} />}
+          </colgroup>
 
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Item Code</th>
-            <th>Qty</th>
-            <th>Table Type</th>
-            <th>Table #</th>
-            <th>Security Type</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {records.map((record) => (
-            <tr key={record.id}>
-              <td className="desc-col">
-                <span
-                  className="de-description-text"
-                  title={record.description}
-                >
-                  {record.description || "—"}
-                </span>
-              </td>
-
-              <td className="code-col">
-                <span
-                  className="de-item-code"
-                  title={record.itemCode}
-                >
-                  {record.itemCode || "—"}
-                </span>
-              </td>
-
-              <td className="qty-col">
-                <strong className="de-quantity">
-                  {record.quantity}
-                </strong>
-              </td>
-
-              <td className="type-col">
-                <span className="de-table-type-badge">
-                  {record.tableType || "—"}
-                </span>
-              </td>
-
-              <td className="table-no-col">
-                <span className="de-muted-value">
-                  {record.tableNumber || "—"}
-                </span>
-              </td>
-
-              <td className="security-col">
-                <span className="de-muted-value">
-                  {record.securityType || "—"}
-                </span>
-              </td>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Item Code</th>
+              <th>Qty</th>
+              <th>Table Type</th>
+              <th>Table #</th>
+              <th>Security Type</th>
+              {userType !== "admin" && <th>Create Request</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {records.map((record) => {
+              const canCreateRequest =
+                record.id !== null &&
+                record.id !== undefined &&
+                record.id !== "" &&
+                Number.isFinite(Number(record.id));
+
+              return (
+                <tr key={record.id}>
+                  <td className="desc-col">
+                    <span
+                      className="de-description-text"
+                      title={record.description}
+                    >
+                      {record.description || "—"}
+                    </span>
+                  </td>
+
+                  <td className="code-col">
+                    <span
+                      className="de-item-code"
+                      title={record.itemCode}
+                    >
+                      {record.itemCode || "—"}
+                    </span>
+                  </td>
+
+                  <td className="qty-col">
+                    <strong className="de-quantity">
+                      {record.quantity}
+                    </strong>
+                  </td>
+
+                  <td className="type-col">
+                    <span className="de-table-type-badge">
+                      {record.tableType || "—"}
+                    </span>
+                  </td>
+
+                  <td className="table-no-col">
+                    <span className="de-muted-value">
+                      {record.tableNumber || "—"}
+                    </span>
+                  </td>
+
+                  <td className="security-col">
+                    <span className="de-muted-value">
+                      {record.securityType || "—"}
+                    </span>
+                  </td>
+
+                  {userType !== "admin" &&
+                    <td style={{ textAlign: "center" }}>
+                      <ButtonBase
+                        onClick={() =>
+                          setSelectedRecord(record)
+                        }
+                        disabled={!canCreateRequest}
+                        aria-label={`Create request for ${record.description ||
+                          record.itemCode ||
+                          "display record"
+                          }`}
+                        title={
+                          canCreateRequest
+                            ? "Create Request"
+                            : "Display record ID not found"
+                        }
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: "50%",
+                          color: "primary.main",
+                          "&:hover": {
+                            backgroundColor: "action.hover"
+                          },
+                          "&.Mui-disabled": {
+                            color: "action.disabled"
+                          }
+                        }}
+                      >
+                        <PostAddOutlinedIcon
+                          fontSize="small"
+                        />
+                      </ButtonBase>
+                    </td>}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <CreateRequestDialog
+        open={Boolean(selectedRecord)}
+        onClose={handleCloseCreateRequest}
+        record={selectedRecord}
+      />
+    </>
   );
 };
 
@@ -245,7 +311,6 @@ const StoreSection = ({ store }) => {
       const images = getImagesFromResponse(
         response.data
       );
-      console.log(images, "imagesimagesimages")
       if (images.length === 0) {
         setStoreImages([]);
         setImagesModalOpen(false);
@@ -329,7 +394,7 @@ const StoreSection = ({ store }) => {
               </>
             ) : (
               <>
-                  <CollectionsIcon
+                <CollectionsIcon
                   size={19}
                   stroke={2}
                   style={{ marginRight: "4px" }}
@@ -372,7 +437,7 @@ const StoreSection = ({ store }) => {
               </>
             ) : (
               <>
-                  <CollectionsIcon
+                <CollectionsIcon
                   size={19}
                   stroke={2}
                   style={{ marginRight: "4px" }}
