@@ -1,9 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
+
+# Yarn
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -11,21 +11,34 @@
 !.yarn/sdks
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# production
+# Build output
 /build
 /dist
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Vite cache
+.vite/
 
+# Environment overrides
+.env.local
+.env.*.local
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Editors
 /.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# ESLint cache
+.eslintcache
