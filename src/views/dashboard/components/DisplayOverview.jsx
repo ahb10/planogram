@@ -149,7 +149,7 @@ const buildOverviewData = (summaryResponse) => {
     return {
       region_id: region?.id,
       region_name:
-        region?.name || 'Unknown Region',
+        region?.region_name || 'Unknown Region',
       sku_count: Number(region?.sku_count) || 0,
       store_count:
         Number(region?.store_count) ||
@@ -592,7 +592,7 @@ const DisplayOverview = () => {
               <article
                 className="overview-region-card"
                 key={region?.region_id}
-              >
+              >{console.log(region,'regionregion')}
                 <h3>{region?.region_name || 'Unknown Region'}</h3>
 
                 <div className="overview-region-stats">
