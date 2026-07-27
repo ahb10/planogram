@@ -10,7 +10,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import StorageIcon from '@mui/icons-material/Storage';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-
+import BusinessIcon from '@mui/icons-material/Business';
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
 const authState = JSON.parse(localStorage.getItem('auth-state') || '{}');
@@ -58,7 +58,7 @@ const dashboard = {
       title: 'Brands',
       type: 'item',
       url: '/brands',
-      icon: AppleIcon,
+      icon: BusinessIcon,
       breadcrumbs: true
     },
     {
@@ -103,7 +103,7 @@ const dashboard = {
     },
     {
       id: 'admin-change-request',
-      title: 'Listing',
+      title: 'Requests',
       type: 'item',
       url: '/admin-change-request',
       icon: FormatListBulletedIcon,

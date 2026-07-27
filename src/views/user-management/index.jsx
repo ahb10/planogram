@@ -103,14 +103,26 @@ export default function UserManagementPage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.errors?.name[0];
+      const responseData = error?.response?.data;
 
-      if (!message) {
-        return;
-      }
+      const firstFieldError =
+        responseData?.errors &&
+          typeof responseData.errors === 'object'
+          ? Object.values(responseData.errors)
+            .flat()
+            .find(Boolean)
+          : null;
+
+      const message =
+        responseData?.message ||
+        firstFieldError ||
+        responseData?.detail ||
+        error?.message ||
+        'Something went wrong. Please try again.';
 
       enqueueSnackbar(message, {
-        variant: 'error'
+        variant: 'error',
+        preventDuplicate: true
       });
     },
     [enqueueSnackbar]
@@ -398,10 +410,11 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     if (isError && error) {
+      console.log(isError, "errror", error)
       showApiError(error);
     }
   }, [isError, error, showApiError]);
-  
+
   return (
     <>
       <MainCard
@@ -432,7 +445,9 @@ export default function UserManagementPage() {
             error={
               isError
                 ? {
-                  message: showApiError(error)
+                  message:
+                    error?.response?.data?.message ||
+                    'Unable to load users.'
                 }
                 : null
             }
