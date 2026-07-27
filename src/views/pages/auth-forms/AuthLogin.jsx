@@ -22,6 +22,7 @@ import AnimateButton from 'ui-component/extended/AnimateButton';
 import useAppStore from 'store/appStore';
 import { loginUser } from 'api/authApi';
 import loginSchema from './loginSchema';
+import { useSnackbar } from 'notistack';
 
 // assets
 import Visibility from '@mui/icons-material/Visibility';
@@ -34,6 +35,7 @@ export default function AuthLogin() {
   const theme = useTheme();
   const navigate = useNavigate();
   const setAuth = useAppStore((state) => state.setAuth);
+  const { enqueueSnackbar } = useSnackbar();
 
   const [checked, setChecked] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +49,7 @@ export default function AuthLogin() {
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
+
     onSuccess: (data) => {
       const authPayload = {
         accessToken: data?.access || '',
@@ -60,8 +63,22 @@ export default function AuthLogin() {
       setAuth(authPayload);
       navigate('/');
     },
-    onError: () => {
-      // You can show an error snackbar here later.
+
+    onError: (error) => {
+      const responseData = error?.response?.data;
+
+      const message =
+        responseData?.message ||
+        responseData?.errors?.non_field_errors?.[0] ||
+        Object.values(responseData?.errors || {})
+          .flat()
+          .find(Boolean) ||
+        'Unable to sign in. Please try again.';
+
+      enqueueSnackbar(message, {
+        variant: 'error',
+        preventDuplicate: true
+      });
     }
   });
 
