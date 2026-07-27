@@ -587,6 +587,32 @@ const DisplayRecordFormFields = ({
     });
   };
 
+  const handleNonNegativeNumberChange = (
+    fieldName,
+    event
+  ) => {
+    const nextValue = event.target.value;
+
+    if (nextValue === '') {
+      setFieldValue(fieldName, '');
+      return;
+    }
+
+    if (!/^\d+$/.test(nextValue)) {
+      return;
+    }
+
+    setFieldValue(fieldName, nextValue);
+  };
+
+  const preventInvalidNumberKeys = (event) => {
+    if (
+      ['-', '+', 'e', 'E', '.'].includes(event.key)
+    ) {
+      event.preventDefault();
+    }
+  };
+
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
 
@@ -722,8 +748,14 @@ const DisplayRecordFormFields = ({
           label="Table Number"
           type="number"
           value={values.table_number}
-          onChange={handleChange}
+          onChange={(event) =>
+            handleNonNegativeNumberChange(
+              'table_number',
+              event
+            )
+          }
           onBlur={handleBlur}
+          onKeyDown={preventInvalidNumberKeys}
           inputProps={{
             onWheel: (event) => {
               event.currentTarget.blur();
@@ -768,8 +800,14 @@ const DisplayRecordFormFields = ({
           label="Quantity"
           type="number"
           value={values.quantity}
-          onChange={handleChange}
+          onChange={(event) =>
+            handleNonNegativeNumberChange(
+              'quantity',
+              event
+            )
+          }
           onBlur={handleBlur}
+          onKeyDown={preventInvalidNumberKeys}
           inputProps={{
             onWheel: (event) => {
               event.currentTarget.blur();
@@ -871,7 +909,7 @@ export default function DisplayRecordsPage() {
 
   const handleOpenEdit = useCallback(
     async (record) => {
-      console.log(record,"recordrecord")
+      console.log(record, "recordrecord")
       if (!record?.id) {
         return;
       }

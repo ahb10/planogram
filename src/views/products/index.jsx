@@ -243,9 +243,7 @@ export default function ProductsPage() {
         category: values.category,
         brand: values.brand,
         sku: values.sku,
-        price: values.price,
         description: values.description || '',
-        stock: values.stock
       };
 
       const response = await api.post(
@@ -274,9 +272,7 @@ export default function ProductsPage() {
         category: values.category,
         brand: values.brand,
         sku: values.sku,
-        price: values.price,
         description: values.description || '',
-        stock: values.stock,
         status: values.status ?? true
       };
 
@@ -447,7 +443,7 @@ export default function ProductsPage() {
             variant="body2"
             color="text.secondary"
           >
-            Manage your products, stock, and pricing.
+            Manage your products.
           </Typography>
 
           <ServerTable
@@ -536,10 +532,8 @@ export default function ProductsPage() {
                 selectedProduct?.brand
               ),
               sku: selectedProduct?.sku || '',
-              price: selectedProduct?.price || '',
               description:
                 selectedProduct?.description || '',
-              stock: selectedProduct?.stock ?? '',
               status:
                 selectedProduct?.status ?? true
             }}
@@ -758,100 +752,6 @@ export default function ProductsPage() {
                           sx={{ mt: 0.5 }}
                         >
                           {errors.sku}
-                        </Typography>
-                      )}
-                  </FormControl>
-
-                  <FormControl
-                    fullWidth
-                    error={Boolean(
-                      touched.price &&
-                      errors.price
-                    )}
-                  >
-                    <InputLabel htmlFor="product-price">
-                      Price
-                    </InputLabel>
-
-                    <OutlinedInput
-                      id="product-price"
-                      name="price"
-                      label="Price"
-                      type="number"
-                      value={values.price}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      inputProps={{
-                        onWheel: (event) => {
-                          event.currentTarget.blur();
-                        }
-                      }}
-                      sx={{
-                        '& input[type="number"]': {
-                          MozAppearance: 'textfield'
-                        },
-                        '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
-                        {
-                          WebkitAppearance: 'none',
-                        }
-                      }}
-                    />
-
-                    {touched.price &&
-                      errors.price && (
-                        <Typography
-                          variant="caption"
-                          color="error"
-                          sx={{ mt: 0.5 }}
-                        >
-                          {errors.price}
-                        </Typography>
-                      )}
-                  </FormControl>
-
-                  <FormControl
-                    fullWidth
-                    error={Boolean(
-                      touched.stock &&
-                      errors.stock
-                    )}
-                  >
-                    <InputLabel htmlFor="product-stock">
-                      Stock
-                    </InputLabel>
-
-                    <OutlinedInput
-                      id="product-stock"
-                      name="stock"
-                      label="Stock"
-                      type="number"
-                      value={values.stock}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      inputProps={{
-                        onWheel: (event) => {
-                          event.currentTarget.blur();
-                        }
-                      }}
-                      sx={{
-                        '& input[type="number"]': {
-                          MozAppearance: 'textfield'
-                        },
-                        '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
-                        {
-                          WebkitAppearance: 'none',
-                        }
-                      }}
-                    />
-
-                    {touched.stock &&
-                      errors.stock && (
-                        <Typography
-                          variant="caption"
-                          color="error"
-                          sx={{ mt: 0.5 }}
-                        >
-                          {errors.stock}
                         </Typography>
                       )}
                   </FormControl>

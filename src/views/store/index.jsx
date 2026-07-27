@@ -157,6 +157,7 @@ export default function StorePage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [imageTitleErrors, setImageTitleErrors] = useState([]);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -444,22 +445,25 @@ export default function StorePage() {
 
   const removeLocalImage = (imageIndex) => {
     setImagePreviews((currentImages) => {
-      const removedImage =
-        currentImages[imageIndex];
+      const removedImage = currentImages[imageIndex];
 
       if (
         removedImage?.isObjectUrl &&
         removedImage?.url
       ) {
-        URL.revokeObjectURL(
-          removedImage.url
-        );
+        URL.revokeObjectURL(removedImage.url);
       }
 
       return currentImages.filter(
         (_, index) => index !== imageIndex
       );
     });
+
+    setImageTitleErrors((currentErrors) =>
+      currentErrors.filter(
+        (_, index) => index !== imageIndex
+      )
+    );
   };
 
   const deleteStoreMutation = useMutation({
@@ -478,6 +482,7 @@ export default function StorePage() {
   const handleOpenCreate = () => {
     setSelectedStore(null);
     setImagePreviews([]);
+    setImageTitleErrors([]);
     setOpen(true);
   };
 
@@ -486,6 +491,9 @@ export default function StorePage() {
 
     setSelectedStore(store);
     setImagePreviews(existingImages);
+    setImageTitleErrors(
+      existingImages.map(() => '')
+    );
     setOpen(true);
   };
 
@@ -493,6 +501,7 @@ export default function StorePage() {
     setOpen(false);
     setSelectedStore(null);
     setImagePreviews([]);
+    setImageTitleErrors([]);
   };
 
   const handleDelete = (store) => {
@@ -558,6 +567,16 @@ export default function StorePage() {
           : image
       )
     );
+
+    setImageTitleErrors((currentErrors) => {
+      const nextErrors = [...currentErrors];
+
+      nextErrors[imageIndex] = String(title).trim()
+        ? ''
+        : 'Image title is required';
+
+      return nextErrors;
+    });
   };
 
   const updateExistingStoreImage = async (
@@ -638,6 +657,30 @@ export default function StorePage() {
     showApiError
   ]);
 
+  const validateImageTitles = () => {
+    const nextErrors = imagePreviews.map((image) =>
+      String(image?.title || '').trim()
+        ? ''
+        : 'Image title is required'
+    );
+
+    setImageTitleErrors(nextErrors);
+
+    const hasError = nextErrors.some(Boolean);
+
+    if (hasError) {
+      enqueueSnackbar(
+        'Please add a title for every uploaded image.',
+        {
+          variant: 'error',
+          preventDuplicate: true
+        }
+      );
+    }
+
+    return !hasError;
+  };
+
   return (
     <>
       <MainCard
@@ -710,15 +753,21 @@ export default function StorePage() {
             enableReinitialize
             validationSchema={storeSchema}
             onSubmit={(values, { resetForm }) => {
+              if (!validateImageTitles()) {
+                return;
+              }
+
               if (selectedStore?.id) {
                 updateStoreMutation.mutate(values, {
                   onSuccess: () => resetForm()
                 });
-              } else {
-                createStoreMutation.mutate(values, {
-                  onSuccess: () => resetForm()
-                });
+
+                return;
               }
+
+              createStoreMutation.mutate(values, {
+                onSuccess: () => resetForm()
+              });
             }}
           >
             {({
@@ -1023,6 +1072,7 @@ export default function StorePage() {
                               </Button>
                               <TextField
                                 fullWidth
+                                required
                                 size="small"
                                 label={`Image ${index + 1} Title`}
                                 value={image.title}
@@ -1032,6 +1082,8 @@ export default function StorePage() {
                                     event.target.value
                                   )
                                 }
+                                error={Boolean(imageTitleErrors[index])}
+                                helperText={imageTitleErrors[index] || ''}
                               />
                             </Paper>
                           );
