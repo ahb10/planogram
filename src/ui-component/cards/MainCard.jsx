@@ -50,7 +50,7 @@ const MainCard = forwardRef(function MainCard(
       }}
     >
       {/* card header and action */}
-      {!darkTitle && title && <CardHeader sx={{ ...headerStyle, ...headerSX }} 
+      {!darkTitle && secondary && <CardHeader sx={{ ...headerStyle, ...headerSX }} 
       // title={title} 
       action={secondary} />}
       {darkTitle && title && (
@@ -60,7 +60,7 @@ const MainCard = forwardRef(function MainCard(
       )}
 
       {/* content & header divider */}
-      {title && <Divider />}
+      {secondary && <Divider />}
 
       {/* card content */}
       {content && (

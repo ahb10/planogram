@@ -944,13 +944,7 @@ export default function ChangeRequestsPage() {
       <MainCard
         title="Change Requests"
         secondary={
-          <Button
-            variant="contained"
-            onClick={handleOpenCreate}
-            disabled={isRegionsLoading || isRegionsError}
-          >
-            Create Request
-          </Button>
+          ""
         }
       >
         <Stack spacing={2}>

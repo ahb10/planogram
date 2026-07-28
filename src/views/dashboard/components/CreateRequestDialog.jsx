@@ -78,6 +78,7 @@ const ReadOnlyField = ({ label, value }) => (
         : value
     }
     fullWidth
+    disabled
     InputProps={{
       readOnly: true
     }}

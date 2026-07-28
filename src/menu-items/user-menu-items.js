@@ -18,7 +18,7 @@ const userDashboard = {
     },
     {
       id: 'request',
-      title: 'Change Request',
+      title: 'Change Requests',
       type: 'item',
       url: '/change-request',
       icon: PlaylistAddIcon,

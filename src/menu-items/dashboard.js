@@ -103,7 +103,7 @@ const dashboard = {
     },
     {
       id: 'admin-change-request',
-      title: 'Requests',
+      title: 'Change Requests',
       type: 'item',
       url: '/admin-change-request',
       icon: FormatListBulletedIcon,

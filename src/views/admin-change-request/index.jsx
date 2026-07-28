@@ -119,6 +119,8 @@ const AdminChangeRequest = () => {
   const [recordDetail, setRecordDetail] =
     useState(null);
 
+  const [description, setDescription] = useState("")
+
   const showApiError = useCallback(
     (error) => {
       enqueueSnackbar(
@@ -281,10 +283,12 @@ const AdminChangeRequest = () => {
 
     onSuccess: (responseData) => {
       setRecordDetail(responseData?.data || null);
-      setRecordDetailOpen(true);
     },
 
-    onError: showApiError
+    onError: (error) => {
+      setRecordDetail(null);
+      showApiError(error);
+    }
   });
 
   const handleOpenRecordDetail = useCallback(
@@ -310,6 +314,8 @@ const AdminChangeRequest = () => {
       }
 
       setRecordDetail(null);
+      recordDetailMutation.reset();
+      setRecordDetailOpen(true);
       recordDetailMutation.mutate(recordId);
     },
     [recordDetailMutation, enqueueSnackbar]
@@ -322,7 +328,8 @@ const AdminChangeRequest = () => {
 
     setRecordDetailOpen(false);
     setRecordDetail(null);
-  }, [recordDetailMutation.isPending]);
+    recordDetailMutation.reset();
+  }, [recordDetailMutation]);
 
   const updateRequestMutation = useMutation({
     mutationFn: async (values) => {
@@ -435,8 +442,9 @@ const AdminChangeRequest = () => {
           <Button
             variant="text"
             size="small"
-            onClick={() =>
-              handleOpenRecordDetail(request)
+            onClick={() => {
+              handleOpenRecordDetail(request); setDescription(request?.description)
+            }
             }
             disabled={
               recordDetailMutation.isPending
@@ -604,7 +612,9 @@ const AdminChangeRequest = () => {
     ],
     [
       handleOpenEdit,
-      handleOpenDelete
+      handleOpenDelete,
+      handleOpenRecordDetail,
+      recordDetailMutation.isPending
     ]
   );
 
@@ -904,35 +914,45 @@ const AdminChangeRequest = () => {
 
       {/* detail dialog */}
 
-      {recordDetail &&
-        <Dialog
-          open={recordDetailOpen}
-          onClose={handleCloseRecordDetail}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            Display Record Details for ID: {recordDetail?.id}
-          </DialogTitle>
+      <Dialog
+        open={recordDetailOpen}
+        onClose={handleCloseRecordDetail}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {recordDetailMutation.isPending
+            ? 'Loading Display Record'
+            : `Display Record Details for ID: ${recordDetail?.id || '-'}`}
+        </DialogTitle>
 
-          <DialogContent>
-            {recordDetailMutation.isPending ? (
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                spacing={2}
-                sx={{ py: 6 }}
+        <DialogContent>
+          {recordDetailMutation.isPending ? (
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              spacing={2}
+              sx={{ py: 6 }}
+            >
+              <CircularProgress size={32} />
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
               >
-                <CircularProgress size={32} />
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  Loading display record...
-                </Typography>
-              </Stack>
-            ) : recordDetail ? (
+                Loading display record...
+              </Typography>
+            </Stack>
+          ) : recordDetailMutation.isError ? (
+            <Typography
+              variant="body2"
+              color="error"
+              sx={{ py: 3 }}
+            >
+              Unable to load display record details.
+            </Typography>
+          ) : recordDetail ? (
+            <>
               <Box
                 sx={{
                   mt: 1,
@@ -944,7 +964,6 @@ const AdminChangeRequest = () => {
                   gap: 2
                 }}
               >
-
                 <RecordDetailItem
                   label="Region"
                   value={recordDetail?.region_name}
@@ -969,11 +988,11 @@ const AdminChangeRequest = () => {
                   label="Table Type"
                   value={recordDetail?.table_type_name}
                 />
-
-                <RecordDetailItem
-                  label="Table Number"
-                  value={recordDetail?.table_number}
-                />
+                {/* 
+              <RecordDetailItem
+                label="Table Number"
+                value={recordDetail?.table_number}
+              /> */}
 
                 <RecordDetailItem
                   label="Product"
@@ -1008,32 +1027,62 @@ const AdminChangeRequest = () => {
                 <RecordDetailItem
                   label="Created At"
                   value={
-                    recordDetail.created_at
-                      ? formatDate(recordDetail?.created_at)
+                    recordDetail?.created_at
+                      ? formatDate(recordDetail.created_at)
                       : '-'
                   }
                 />
               </Box>
-            ) : (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ py: 3 }}
-              >
-                Display record details are not available.
-              </Typography>
-            )}
-          </DialogContent>
 
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button
-              onClick={handleCloseRecordDetail}
-              disabled={recordDetailMutation.isPending}
+              <Box
+                sx={{
+                  p: 1.5,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  marginTop: 2
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ mb: 0.5 }}
+                >
+                  Description
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  sx={{
+                    overflowWrap: 'anywhere'
+                  }}
+                >
+                  {description}
+                </Typography>
+              </Box>
+            </>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ py: 3 }}
             >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>}
+              Display record details are not available.
+            </Typography>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={handleCloseRecordDetail}
+            disabled={recordDetailMutation.isPending}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

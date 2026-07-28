@@ -76,32 +76,36 @@ export default function DescriptionModal({
             </Typography>
           </Stack>
 
-          <Divider />
+          {rejectionReason &&
+            <>
+              <Divider />
 
-          <Stack spacing={1}>
-            <Typography
-              variant="subtitle1"
-              fontWeight={600}
-            >
-              Rejection Reason
-            </Typography>
+              <Stack spacing={1}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={600}
+                >
+                  Rejection Reason
+                </Typography>
 
-            <Typography
-              variant="body1"
-              color={
-                rejectionReason
-                  ? 'text.primary'
-                  : 'text.secondary'
-              }
-              sx={{
-                whiteSpace: 'pre-wrap',
-                overflowWrap: 'anywhere',
-                lineHeight: 1.7
-              }}
-            >
-              {rejectionReason || rejectionReasonEmptyMessage}
-            </Typography>
-          </Stack>
+                <Typography
+                  variant="body1"
+                  color={
+                    rejectionReason
+                      ? 'text.primary'
+                      : 'text.secondary'
+                  }
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'anywhere',
+                    lineHeight: 1.7
+                  }}
+                >
+                  {rejectionReason || rejectionReasonEmptyMessage}
+                </Typography>
+              </Stack>
+            </>
+          }
         </Stack>
       </DialogContent>
 
