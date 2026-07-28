@@ -34,8 +34,17 @@ const SkuTable = ({ records }) => {
 
   return (
     <>
-      <div className="de-table-scroll">
-        <table className="de-sku-table">
+      <div
+        className="de-table-scroll"
+        role="region"
+        aria-label="SKU records"
+        tabIndex={0}
+      >
+        <table
+          className={`de-sku-table ${
+            userType !== "admin" ? "has-request-column" : ""
+          }`}
+        >
           <colgroup>
             <col className="de-description-column" />
             <col className="de-code-column" />
@@ -43,18 +52,22 @@ const SkuTable = ({ records }) => {
             <col className="de-type-column" />
             <col className="de-number-column" />
             <col className="de-security-column" />
-            {userType !== "admin" && <col style={{ width: 130 }} />}
+            {userType !== "admin" && (
+              <col className="de-request-column" />
+            )}
           </colgroup>
 
           <thead>
             <tr>
-              <th>Description</th>
-              <th>Item Code</th>
-              <th>Qty</th>
-              <th>Table Type</th>
-              <th>Table #</th>
-              <th>Security Type</th>
-              {userType !== "admin" && <th>Create Request</th>}
+              <th className="desc-col">Description</th>
+              <th className="code-col">Item Code</th>
+              <th className="qty-col">Qty</th>
+              <th className="type-col">Table Type</th>
+              <th className="table-no-col">Table #</th>
+              <th className="security-col">Security Type</th>
+              {userType !== "admin" && (
+                <th className="request-col">Create Request</th>
+              )}
             </tr>
           </thead>
 
@@ -93,7 +106,10 @@ const SkuTable = ({ records }) => {
                   </td>
 
                   <td className="type-col">
-                    <span className="de-table-type-badge">
+                    <span
+                      className="de-table-type-badge"
+                      title={record.tableType}
+                    >
                       {record.tableType || "—"}
                     </span>
                   </td>
@@ -105,13 +121,16 @@ const SkuTable = ({ records }) => {
                   </td>
 
                   <td className="security-col">
-                    <span className="de-muted-value">
+                    <span
+                      className="de-muted-value"
+                      title={record.securityType}
+                    >
                       {record.securityType || "—"}
                     </span>
                   </td>
 
                   {userType !== "admin" &&
-                    <td style={{ textAlign: "center" }}>
+                    <td className="request-col">
                       <ButtonBase
                         onClick={() =>
                           setSelectedRecord(record)

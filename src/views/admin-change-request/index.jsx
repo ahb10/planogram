@@ -523,7 +523,7 @@ const AdminChangeRequest = () => {
             sx={{
               display: '-webkit-box',
               WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 1,
               overflow: 'hidden',
               lineHeight: 1.5,
               whiteSpace: 'normal',
@@ -1000,7 +1000,7 @@ const AdminChangeRequest = () => {
                 />
 
                 <RecordDetailItem
-                  label="Product SKU"
+                  label="Item Code"
                   value={recordDetail?.product_sku}
                 />
 
