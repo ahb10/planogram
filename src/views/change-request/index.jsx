@@ -91,11 +91,11 @@ const getApiErrorMessage = (error) => {
 
 const getStatusColor = (status) => {
   switch (String(status || '').toLowerCase()) {
-    case 'approved':
+    case 'completed':
       return 'success';
     case 'rejected':
       return 'error';
-    case 'pending':
+    case 'in process':
       return 'warning';
     default:
       return 'default';

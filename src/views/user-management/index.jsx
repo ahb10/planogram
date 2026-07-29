@@ -52,7 +52,7 @@ const getUserSchema = (isEditMode) =>
       .required('Email is required'),
     user_type: Yup.string()
       .oneOf(
-        ['admin', 'user'],
+        ['admin', 'user', 'viewer'],
         'Select a valid user type'
       )
       .required('User type is required'),
@@ -353,7 +353,7 @@ export default function UserManagementPage() {
         cellSx: {
           textTransform: 'capitalize'
         },
-        render: (user) => user?.user_type || '-'
+        render: (user) => user?.user_type == 'user' ? "Demand User" : user?.user_type || '-'
       },
       {
         id: 'created_at',
@@ -624,12 +624,17 @@ export default function UserManagementPage() {
                       onChange={handleChange}
                       onBlur={handleBlur}
                     >
-                      <MenuItem value="user">
-                        User
-                      </MenuItem>
 
                       <MenuItem value="admin">
                         Admin
+                      </MenuItem>
+
+                      <MenuItem value="user">
+                        Demand User
+                      </MenuItem>
+
+                      <MenuItem value="viewer">
+                        Viewer
                       </MenuItem>
                     </Select>
 

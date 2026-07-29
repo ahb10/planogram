@@ -69,13 +69,13 @@ const getApiErrorMessage = (error) => {
 
 const getStatusColor = (status) => {
   switch (String(status || '').toLowerCase()) {
-    case 'approved':
+    case 'completed':
       return 'success';
 
     case 'rejected':
       return 'error';
 
-    case 'pending':
+    case 'in process':
       return 'warning';
 
     default:
@@ -89,7 +89,7 @@ const getRequestStatus = (requestStatus) => {
       (statusOption) =>
         statusOption.toLowerCase() ===
         String(requestStatus || '').toLowerCase()
-    ) || 'Pending'
+    ) || 'In Process'
   );
 };
 
@@ -475,9 +475,9 @@ const AdminChangeRequest = () => {
           request?.user_name || '-'
       },
       {
-        id: 'display_record',
+        id: 'display_records',
         label: 'Display Record',
-        minWidth: 130,
+        minWidth: 180,
         align: 'center',
         sx: {
           whiteSpace: 'nowrap'
@@ -485,21 +485,48 @@ const AdminChangeRequest = () => {
         cellSx: {
           whiteSpace: 'nowrap'
         },
-        render: (request) =>
-          request?.display_record || '-'
+        render: (request) => {
+          const displayRecordIds =
+            Array.isArray(request?.display_records)
+              ? request.display_records
+                .map((record) => record?.id)
+                .filter(
+                  (id) =>
+                    id !== null &&
+                    id !== undefined
+                )
+              : [];
+
+          return displayRecordIds.length > 0
+            ? displayRecordIds.join(', ')
+            : '-';
+        }
       },
       {
         id: 'store_name',
         label: 'Store',
-        minWidth: 170,
+        minWidth: 220,
         sx: {
           whiteSpace: 'nowrap'
         },
         cellSx: {
           whiteSpace: 'nowrap'
         },
-        render: (request) =>
-          request?.store_name || '-'
+        render: (request) => {
+          const storeNames =
+            Array.isArray(request?.display_records)
+              ? request.display_records
+                .map(
+                  (record) =>
+                    record?.store_name
+                )
+                .filter(Boolean)
+              : [];
+
+          return storeNames.length > 0
+            ? storeNames.join(', ')
+            : '-';
+        }
       },
       {
         id: 'description',
@@ -547,9 +574,7 @@ const AdminChangeRequest = () => {
         render: (request) => (
           <Chip
             size="small"
-            label={
-              request?.status || 'Pending'
-            }
+            label={request?.status || 'In Process'}
             color={getStatusColor(
               request?.status
             )}
@@ -636,7 +661,7 @@ const AdminChangeRequest = () => {
             variant="body2"
             color="text.secondary"
           >
-            Review, approve, reject, or
+            Review, complete, reject, or
             delete user change requests.
           </Typography>
 

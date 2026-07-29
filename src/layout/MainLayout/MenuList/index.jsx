@@ -8,7 +8,7 @@ import Box from '@mui/material/Box';
 import NavItem from './NavItem';
 import NavGroup from './NavGroup';
 
-import { adminMenu, userMenu } from 'menu-items';
+import { adminMenu, userMenu, viewerMenu } from 'menu-items';
 import { useGetMenuMaster } from 'api/menu';
 import useAppStore from 'store/appStore';
 
@@ -20,7 +20,7 @@ function MenuList() {
 
   const menuItems =
     String(userType || '').toLowerCase() === 'admin'
-      ? adminMenu
+      ? adminMenu : String(userType || '').toLowerCase() === 'viewer' ? viewerMenu
       : userMenu;
 
   const [selectedID, setSelectedID] = useState('');

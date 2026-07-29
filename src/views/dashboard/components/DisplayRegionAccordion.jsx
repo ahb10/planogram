@@ -1,6 +1,8 @@
 import {
   Box,
+  Button,
   ButtonBase,
+  Checkbox,
   CircularProgress,
   Collapse,
   Dialog,
@@ -21,161 +23,205 @@ import CreateRequestDialog from "./CreateRequestDialog";
 import useAppStore from "store/appStore";
 
 
-const SkuTable = ({ records }) => {
-
+const SkuTable = ({
+  records,
+  store,
+  regionName,
+  selectedRecords,
+  onToggleRecord
+}) => {
   const { userType } = useAppStore();
 
-  const [selectedRecord, setSelectedRecord] =
-    useState(null);
-
-  const handleCloseCreateRequest = () => {
-    setSelectedRecord(null);
-  };
+  const isRecordSelected = (recordId) =>
+    selectedRecords.some(
+      (selectedRecord) =>
+        String(selectedRecord.id) ===
+        String(recordId)
+    );
 
   return (
-    <>
-      <div
-        className="de-table-scroll"
-        role="region"
-        aria-label="SKU records"
-        tabIndex={0}
-      >
-        <table
-          className={`de-sku-table ${
-            userType !== "admin" ? "has-request-column" : ""
+    <div
+      className="de-table-scroll"
+      role="region"
+      aria-label="SKU records"
+      tabIndex={0}
+    >
+      <table
+        className={`de-sku-table ${userType === "user"
+            ? "has-request-column"
+            : ""
           }`}
-        >
-          <colgroup>
-            <col className="de-description-column" />
-            <col className="de-code-column" />
-            <col className="de-qty-column" />
-            <col className="de-type-column" />
-            <col className="de-number-column" />
-            <col className="de-security-column" />
-            {userType !== "admin" && (
-              <col className="de-request-column" />
+      >
+        <colgroup>
+          <col className="de-description-column" />
+          <col className="de-code-column" />
+          <col className="de-qty-column" />
+          <col className="de-type-column" />
+          <col className="de-number-column" />
+          <col className="de-security-column" />
+
+          {userType === "user" && (
+            <col className="de-request-column" />
+          )}
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th className="desc-col">
+              Description
+            </th>
+
+            <th className="code-col">
+              Item Code
+            </th>
+
+            <th className="qty-col">
+              Qty
+            </th>
+
+            <th className="type-col">
+              Table Type
+            </th>
+
+            <th className="table-no-col">
+              Table #
+            </th>
+
+            <th className="security-col">
+              Security Type
+            </th>
+
+            {userType === "user" && (
+              <th className="request-col">
+                Select
+              </th>
             )}
-          </colgroup>
+          </tr>
+        </thead>
 
-          <thead>
-            <tr>
-              <th className="desc-col">Description</th>
-              <th className="code-col">Item Code</th>
-              <th className="qty-col">Qty</th>
-              <th className="type-col">Table Type</th>
-              <th className="table-no-col">Table #</th>
-              <th className="security-col">Security Type</th>
-              {userType !== "admin" && (
-                <th className="request-col">Create Request</th>
-              )}
-            </tr>
-          </thead>
+        <tbody>
+          {records.map((record) => {
+            const canCreateRequest =
+              record?.id !== null &&
+              record?.id !== undefined &&
+              record?.id !== "" &&
+              Number.isFinite(
+                Number(record.id)
+              );
 
-          <tbody>
-            {records.map((record) => {
-              const canCreateRequest =
-                record.id !== null &&
-                record.id !== undefined &&
-                record.id !== "" &&
-                Number.isFinite(Number(record.id));
+            const selected =
+              isRecordSelected(record.id);
 
-              return (
-                <tr key={record.id}>
-                  <td className="desc-col">
-                    <span
-                      className="de-description-text"
-                      title={record.description}
-                    >
-                      {record.description || "—"}
-                    </span>
-                  </td>
+            const requestRecord = {
+              ...record,
+              region:
+                record?.region ||
+                regionName ||
+                "—",
+              storeName:
+                record?.storeName ||
+                store?.name ||
+                "—",
+              branch:
+                record?.branch ||
+                store?.branch ||
+                "—",
+              storeId:
+                record?.storeId ||
+                store?.id ||
+                null
+            };
 
-                  <td className="code-col">
-                    <span
-                      className="de-item-code"
-                      title={record.itemCode}
-                    >
-                      {record.itemCode || "—"}
-                    </span>
-                  </td>
+            return (
+              <tr key={record.id}>
+                <td className="desc-col">
+                  <span
+                    className="de-description-text"
+                    title={record.description}
+                  >
+                    {record.description ||
+                      "—"}
+                  </span>
+                </td>
 
-                  <td className="qty-col">
-                    <strong className="de-quantity">
-                      {record.quantity}
-                    </strong>
-                  </td>
+                <td className="code-col">
+                  <span
+                    className="de-item-code"
+                    title={record.itemCode}
+                  >
+                    {record.itemCode || "—"}
+                  </span>
+                </td>
 
-                  <td className="type-col">
-                    <span
-                      className="de-table-type-badge"
-                      title={record.tableType}
-                    >
-                      {record.tableType || "—"}
-                    </span>
-                  </td>
+                <td className="qty-col">
+                  <strong className="de-quantity">
+                    {record.quantity ?? "—"}
+                  </strong>
+                </td>
 
-                  <td className="table-no-col">
-                    <span className="de-muted-value">
-                      {record.tableNumber || "—"}
-                    </span>
-                  </td>
+                <td className="type-col">
+                  <span
+                    className="de-table-type-badge"
+                    title={record.tableType}
+                  >
+                    {record.tableType || "—"}
+                  </span>
+                </td>
 
-                  <td className="security-col">
-                    <span
-                      className="de-muted-value"
-                      title={record.securityType}
-                    >
-                      {record.securityType || "—"}
-                    </span>
-                  </td>
+                <td className="table-no-col">
+                  <span className="de-muted-value">
+                    {record.tableNumber ??
+                      "—"}
+                  </span>
+                </td>
 
-                  {userType !== "admin" &&
-                    <td className="request-col">
-                      <ButtonBase
-                        onClick={() =>
-                          setSelectedRecord(record)
-                        }
-                        disabled={!canCreateRequest}
-                        aria-label={`Create request for ${record.description ||
+                <td className="security-col">
+                  <span
+                    className="de-muted-value"
+                    title={
+                      record.securityType
+                    }
+                  >
+                    {record.securityType ||
+                      "—"}
+                  </span>
+                </td>
+
+                {userType === "user" && (
+                  <td className="request-col">
+                    <Checkbox
+                      size="small"
+                      checked={selected}
+                      disabled={
+                        !canCreateRequest
+                      }
+                      onChange={() =>
+                        onToggleRecord(
+                          requestRecord
+                        )
+                      }
+                      inputProps={{
+                        "aria-label": `Select ${record.description ||
                           record.itemCode ||
                           "display record"
-                          }`}
-                        title={
-                          canCreateRequest
-                            ? "Create Request"
-                            : "Display record ID not found"
-                        }
-                        sx={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: "50%",
-                          color: "primary.main",
-                          "&:hover": {
-                            backgroundColor: "action.hover"
-                          },
-                          "&.Mui-disabled": {
-                            color: "action.disabled"
-                          }
-                        }}
-                      >
-                        <PostAddOutlinedIcon
-                          fontSize="small"
-                        />
-                      </ButtonBase>
-                    </td>}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <CreateRequestDialog
-        open={Boolean(selectedRecord)}
-        onClose={handleCloseCreateRequest}
-        record={selectedRecord}
-      />
-    </>
+                          }`
+                      }}
+                      title={
+                        canCreateRequest
+                          ? selected
+                            ? "Remove from request"
+                            : "Add to request"
+                          : "Display record ID not found"
+                      }
+                    />
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
@@ -292,7 +338,12 @@ const getImagesFromResponse = (responseData) => {
     .filter(Boolean);
 };
 
-const StoreSection = ({ store }) => {
+const StoreSection = ({
+  store,
+  regionName,
+  selectedRecords,
+  onToggleRecord
+}) => {
   const api = useAxios();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -467,7 +518,13 @@ const StoreSection = ({ store }) => {
         </div>
       </div>
 
-      <SkuTable records={store.records} />
+      <SkuTable
+        records={store.records}
+        store={store}
+        regionName={regionName}
+        selectedRecords={selectedRecords}
+        onToggleRecord={onToggleRecord}
+      />
 
       <StoreImagesModal
         open={imagesModalOpen}
@@ -484,6 +541,57 @@ const DisplayRegionAccordion = ({
   expanded,
   onToggle
 }) => {
+  const { userType } = useAppStore();
+
+  const [
+    selectedRecords,
+    setSelectedRecords
+  ] = useState([]);
+
+  const [
+    createRequestOpen,
+    setCreateRequestOpen
+  ] = useState(false);
+
+  const handleToggleRecord = (record) => {
+    setSelectedRecords(
+      (currentRecords) => {
+        const alreadySelected =
+          currentRecords.some(
+            (currentRecord) =>
+              String(currentRecord.id) ===
+              String(record.id)
+          );
+
+        if (alreadySelected) {
+          return currentRecords.filter(
+            (currentRecord) =>
+              String(currentRecord.id) !==
+              String(record.id)
+          );
+        }
+
+        return [
+          ...currentRecords,
+          record
+        ];
+      }
+    );
+  };
+
+  const handleOpenCreateRequest = () => {
+    if (selectedRecords.length === 0) {
+      return;
+    }
+
+    setCreateRequestOpen(true);
+  };
+
+  const handleCloseCreateRequest = () => {
+    setCreateRequestOpen(false);
+    setSelectedRecords([]);
+  };
+
   return (
     <article
       className={`de-region-card ${expanded ? "is-expanded" : ""
@@ -501,7 +609,11 @@ const DisplayRegionAccordion = ({
             {region.storeCount === 1
               ? "store"
               : "stores"}
-            <span className="de-region-dot">·</span>
+
+            <span className="de-region-dot">
+              ·
+            </span>
+
             {region.skuCount} SKUs
           </span>
         </div>
@@ -519,14 +631,76 @@ const DisplayRegionAccordion = ({
         unmountOnExit
       >
         <div className="de-region-content">
+          {userType === "user" && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent:
+                  "flex-end",
+                gap: 1,
+                mb: 1,
+                mt:1,
+                mr:1,
+              }}
+            >
+              {selectedRecords.length >
+                0 && (
+                  <Button
+                    variant="text"
+                    onClick={() =>
+                      setSelectedRecords([])
+                    }
+                  >
+                    Clear Selection
+                  </Button>
+                )}
+
+              <Button
+                variant="contained"
+                startIcon={
+                  <PostAddOutlinedIcon />
+                }
+                onClick={
+                  handleOpenCreateRequest
+                }
+                disabled={
+                  selectedRecords.length ===
+                  0
+                }
+              >
+                Create Request
+                {selectedRecords.length >
+                  0
+                  ? ` (${selectedRecords.length})`
+                  : ""}
+              </Button>
+            </Box>
+          )}
+
           {region.stores.map((store) => (
             <StoreSection
               key={store.key}
               store={store}
+              regionName={region.name}
+              selectedRecords={
+                selectedRecords
+              }
+              onToggleRecord={
+                handleToggleRecord
+              }
             />
           ))}
         </div>
       </Collapse>
+
+      <CreateRequestDialog
+        open={createRequestOpen}
+        onClose={
+          handleCloseCreateRequest
+        }
+        records={selectedRecords}
+      />
     </article>
   );
 };

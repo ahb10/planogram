@@ -12,7 +12,7 @@ import MuiBreadcrumbs from '@mui/material/Breadcrumbs';
 import Box from '@mui/material/Box';
 
 // project imports
-import { adminMenu, userMenu } from 'menu-items';
+import { adminMenu, userMenu, viewerMenu } from 'menu-items';
 
 // assets
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -57,7 +57,7 @@ export default function Breadcrumbs({
 
   const navigation = useMemo(() => {
     return String(userType || '').toLowerCase() === 'admin'
-      ? adminMenu
+      ? adminMenu : String(userType || '').toLowerCase() === 'viewer' ? viewerMenu
       : userMenu;
   }, [userType]);
 

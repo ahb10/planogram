@@ -1,11 +1,9 @@
 // assets
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import ViewInArIcon from '@mui/icons-material/ViewInAr';
-
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
-const userDashboard = {
+const viewerDashboard = {
   id: 'dashboard',
   // title: 'Dashboard',
   type: 'group',
@@ -18,23 +16,7 @@ const userDashboard = {
       icon: DashboardIcon,
       breadcrumbs: false
     },
-    {
-      id: 'products',
-      title: 'Products',
-      type: 'item',
-      url: '/products',
-      icon: ViewInArIcon,
-      breadcrumbs: true
-    },
-    {
-      id: 'request',
-      title: 'Change Requests',
-      type: 'item',
-      url: '/change-request',
-      icon: PlaylistAddIcon,
-      breadcrumbs: true
-    },
   ]
 };
 
-export default userDashboard;
+export default viewerDashboard;

@@ -35,6 +35,7 @@ import ServerTable from 'ui-component/tables/server-side-custom-table';
 
 import useAxios from '../../api/useAxios';
 import productSchema from './productSchema';
+import useAppStore from 'store/appStore';
 
 const getOptionName = (option) => {
   if (typeof option === 'string') {
@@ -53,6 +54,7 @@ const getOptionName = (option) => {
 export default function ProductsPage() {
   const api = useAxios();
   const queryClient = useQueryClient();
+  const { userType } = useAppStore();
 
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -368,15 +370,16 @@ export default function ProductsPage() {
               <EditOutlinedIcon fontSize="small" />
             </IconButton>
 
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() =>
-                handleDelete(product)
-              }
-            >
-              <DeleteOutlineOutlinedIcon fontSize="small" />
-            </IconButton>
+            {userType == "admin" &&
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() =>
+                  handleDelete(product)
+                }
+              >
+                <DeleteOutlineOutlinedIcon fontSize="small" />
+              </IconButton>}
           </>
         )
       }

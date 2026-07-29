@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import { Formik } from "formik";
 import {
   useMutation,
@@ -12,7 +14,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField
+  Stack,
+  TextField,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 
 import useAxios from "../../../api/useAxios";
@@ -55,7 +66,8 @@ const validateRequest = (values) => {
   const errors = {};
 
   if (!values.description.trim()) {
-    errors.description = "Description is required.";
+    errors.description =
+      "Description is required.";
   }
 
   return errors;
@@ -67,53 +79,281 @@ const hasValidRecordId = (value) =>
   value !== "" &&
   Number.isFinite(Number(value));
 
-const ReadOnlyField = ({ label, value }) => (
-  <TextField
-    label={label}
-    value={
-      value === null ||
-        value === undefined ||
-        value === ""
-        ? "—"
-        : value
-    }
-    fullWidth
-    disabled
-    InputProps={{
-      readOnly: true
+const getDisplayValue = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "—";
+  }
+
+  return value;
+};
+
+const RequestRecordsTable = ({ records }) => (
+  <TableContainer
+    component={Paper}
+    variant="outlined"
+    sx={{
+      width: "100%",
+      overflowX: "auto"
     }}
-  />
+  >
+    <Table
+      size="small"
+      sx={{
+        minWidth: 1200
+      }}
+    >
+      <TableHead>
+        <TableRow>
+          <TableCell
+            sx={{
+              minWidth: 100,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Record ID
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 150,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Region
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 180,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Store
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 260,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Product
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 160,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Item Code
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 150,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Table Type
+          </TableCell>
+
+          <TableCell
+            align="center"
+            sx={{
+              minWidth: 120,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Table Number
+          </TableCell>
+
+          <TableCell
+            sx={{
+              minWidth: 180,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Security Type
+          </TableCell>
+
+          <TableCell
+            align="center"
+            sx={{
+              minWidth: 100,
+              whiteSpace: "nowrap",
+              fontWeight: 700
+            }}
+          >
+            Quantity
+          </TableCell>
+        </TableRow>
+      </TableHead>
+
+      <TableBody>
+        {records.map((record) => (
+          <TableRow
+            key={record.id}
+            hover
+          >
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(record?.id)}
+            </TableCell>
+
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(record?.region)}
+            </TableCell>
+
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.storeName
+              )}
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 260,
+                maxWidth: 360,
+                whiteSpace: "normal",
+                overflowWrap: "anywhere"
+              }}
+            >
+              {getDisplayValue(
+                record?.description
+              )}
+            </TableCell>
+
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.itemCode
+              )}
+            </TableCell>
+
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.tableType
+              )}
+            </TableCell>
+
+            <TableCell
+              align="center"
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.tableNumber
+              )}
+            </TableCell>
+
+            <TableCell
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.securityType
+              )}
+            </TableCell>
+
+            <TableCell
+              align="center"
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {getDisplayValue(
+                record?.quantity
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
 );
 
 const CreateRequestDialog = ({
   open,
   onClose,
-  record
+  records = [],
+  record = null
 }) => {
   const api = useAxios();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 
-  const displayRecordId = record?.id ?? null;
+  const validRecords = useMemo(() => {
+    const sourceRecords =
+      Array.isArray(records) &&
+        records.length > 0
+        ? records
+        : record
+          ? [record]
+          : [];
 
-  const hasValidDisplayRecordId =
-    hasValidRecordId(displayRecordId);
+    return sourceRecords.filter((item) =>
+      hasValidRecordId(item?.id)
+    );
+  }, [records, record]);
+
+  const displayRecordIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          validRecords.map((item) =>
+            Number(item.id)
+          )
+        )
+      ),
+    [validRecords]
+  );
+
+  const displayRecordValue =
+    displayRecordIds.join(",");
+
+  const hasValidDisplayRecords =
+    displayRecordIds.length > 0;
 
   const createRequestMutation = useMutation({
     mutationFn: async (values) => {
       const response = await api.post(
         "/api/inventory/create-request",
         {
-          display_record: Number(displayRecordId),
-          description: values.description.trim()
+          display_record: displayRecordValue,
+          description:
+            values.description.trim()
         }
       );
 
       return response.data;
     },
+
     onSuccess: (responseData) => {
       queryClient.invalidateQueries({
         queryKey: ["change-request-list"]
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [
+          "admin-change-request-list"
+        ]
       });
 
       enqueueSnackbar(
@@ -127,11 +367,15 @@ const CreateRequestDialog = ({
 
       onClose();
     },
+
     onError: (error) => {
-      enqueueSnackbar(getApiErrorMessage(error), {
-        variant: "error",
-        preventDuplicate: true
-      });
+      enqueueSnackbar(
+        getApiErrorMessage(error),
+        {
+          variant: "error",
+          preventDuplicate: true
+        }
+      );
     }
   });
 
@@ -148,21 +392,30 @@ const CreateRequestDialog = ({
     <Dialog
       open={open}
       onClose={handleDialogClose}
-      maxWidth="sm"
+      maxWidth="lg"
       fullWidth
     >
-      <DialogTitle>Create Request</DialogTitle>
+      <DialogTitle>
+        Create Request
+        {validRecords.length > 0
+          ? ` (${validRecords.length} ${validRecords.length === 1
+            ? "Record"
+            : "Records"
+          })`
+          : ""}
+      </DialogTitle>
 
       <Formik
-        key={`${displayRecordId}-${open ? "open" : "closed"}`}
+        key={`${displayRecordValue}-${open ? "open" : "closed"
+          }`}
         initialValues={{
           description: ""
         }}
         validate={validateRequest}
         onSubmit={(values) => {
-          if (!hasValidDisplayRecordId) {
+          if (!hasValidDisplayRecords) {
             enqueueSnackbar(
-              "Display record ID not found.",
+              "Select at least one display record.",
               {
                 variant: "error",
                 preventDuplicate: true
@@ -172,7 +425,9 @@ const CreateRequestDialog = ({
             return;
           }
 
-          createRequestMutation.mutate(values);
+          createRequestMutation.mutate(
+            values
+          );
         }}
       >
         {({
@@ -184,59 +439,21 @@ const CreateRequestDialog = ({
           handleSubmit,
           resetForm
         }) => (
-          <Box component="form" onSubmit={handleSubmit}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+          >
             <DialogContent dividers>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    sm: "1fr 1fr"
-                  },
-                  gap: 2
-                }}
-              >
-                <ReadOnlyField
-                  label="Region"
-                  value={record?.region}
+              <Stack spacing={3}>
+                <RequestRecordsTable
+                  records={validRecords}
                 />
-
-                <ReadOnlyField
-                  label="Store"
-                  value={record?.storeName}
-                />
-
-                <ReadOnlyField
-                  label="Product"
-                  value={record?.description}
-                />
-
-                <ReadOnlyField
-                  label="Item Code"
-                  value={record?.itemCode}
-                />
-
-                <ReadOnlyField
-                  label="Table Type"
-                  value={record?.tableType}
-                />
-
-                <ReadOnlyField
-                  label="Table Number"
-                  value={record?.tableNumber}
-                />
-
-                <Box sx={{ gridColumn: "1 / -1" }}>
-                  <ReadOnlyField
-                    label="Security Type"
-                    value={record?.securityType}
-                  />
-                </Box>
 
                 <TextField
                   id="create-request-description"
                   name="description"
                   label="Description"
+                  placeholder="Describe the requested changes"
                   value={values.description}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -254,19 +471,22 @@ const CreateRequestDialog = ({
                   minRows={4}
                   autoFocus
                   fullWidth
-                  sx={{ gridColumn: "1 / -1" }}
                 />
-              </Box>
+              </Stack>
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, py: 2 }}>
+            <DialogActions
+              sx={{ px: 3, py: 2 }}
+            >
               <Button
                 type="button"
                 onClick={() => {
                   resetForm();
                   handleDialogClose();
                 }}
-                disabled={createRequestMutation.isPending}
+                disabled={
+                  createRequestMutation.isPending
+                }
               >
                 Cancel
               </Button>
@@ -276,7 +496,7 @@ const CreateRequestDialog = ({
                 variant="contained"
                 disabled={
                   createRequestMutation.isPending ||
-                  !hasValidDisplayRecordId
+                  !hasValidDisplayRecords
                 }
               >
                 {createRequestMutation.isPending

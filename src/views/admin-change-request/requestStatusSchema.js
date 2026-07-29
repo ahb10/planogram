@@ -1,8 +1,8 @@
 import * as Yup from 'yup';
 
 export const REQUEST_STATUS_OPTIONS = [
-  'Pending',
-  'Approved',
+  'In Process',
+  'Completed',
   'Rejected'
 ];
 
