@@ -39,6 +39,20 @@ import SettingsIcon from '@mui/icons-material/Settings';
 
 // ==============================|| PROFILE MENU ||============================== //
 
+const getGreeting = () => {
+  const currentHour = new Date().getHours();
+
+  if (currentHour < 12) {
+    return 'Good Morning';
+  }
+
+  if (currentHour < 17) {
+    return 'Good Afternoon';
+  }
+
+  return 'Good Evening';
+};
+
 export default function ProfileSection() {
   const theme = useTheme();
   const { borderRadius } = useConfig();
@@ -48,7 +62,9 @@ export default function ProfileSection() {
   const [notification, setNotification] = useState(false);
   const [selectedIndex] = useState(-1);
   const [open, setOpen] = useState(false);
-
+  const [greeting, setGreeting] = useState(
+    getGreeting()
+  );
   /**
    * anchorRef is used on different components and specifying one type leads to other components throwing an error
    * */
@@ -88,6 +104,23 @@ export default function ProfileSection() {
 
     prevOpen.current = open;
   }, [open]);
+
+  useEffect(() => {
+    const updateGreeting = () => {
+      setGreeting(getGreeting());
+    };
+
+    updateGreeting();
+
+    const intervalId = setInterval(
+      updateGreeting,
+      60 * 1000
+    );
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <>
@@ -149,12 +182,12 @@ export default function ProfileSection() {
                     <Box sx={{ p: 2, pb: 0 }}>
                       <Stack>
                         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-                          <Typography variant="h4">Good Morning,</Typography>
+                          <Typography variant="h4">{greeting},</Typography>
                           <Typography component="span" variant="h4" sx={{ fontWeight: 400 }}>
                             {name || 'User'}
                           </Typography>
                         </Stack>
-                        <Typography variant="subtitle2">{userType || 'Member'}</Typography>
+                        <Typography variant="subtitle2">{userType == "user" ? 'Demand User' : userType}</Typography>
                       </Stack>
                       <Divider />
                     </Box>
