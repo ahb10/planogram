@@ -858,8 +858,16 @@ export default function ChangeRequestsPage() {
         cellSx: {
           whiteSpace: 'nowrap'
         },
-        render: (request) =>
-          request?.store_name || '-'
+        render: (request) => {
+          const storeNames =
+            request?.display_records
+              ?.map((record) => record?.store_name)
+              .filter(Boolean) || [];
+
+          return storeNames.length > 0
+            ? storeNames.join(', ')
+            : '-';
+        }
       },
       {
         id: 'request_details',

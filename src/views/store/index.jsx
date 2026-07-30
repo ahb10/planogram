@@ -1002,7 +1002,7 @@ export default function StorePage() {
                       startIcon={<CloudUploadOutlinedIcon />}
                       sx={{ alignSelf: 'flex-start' }}
                     >
-                      {imagePreviews.length > 0 ? 'Change Images' : 'Select Images'}
+                      {imagePreviews.length > 0 ? selectedStore ? 'Upload Images' : 'Change Images' : 'Select Images'}
                       <input
                         hidden
                         multiple
