@@ -16,6 +16,7 @@ import { useSnackbar } from 'notistack';
 
 import {
   Autocomplete,
+  Box,
   Button,
   Chip,
   CircularProgress,
@@ -25,7 +26,14 @@ import {
   DialogTitle,
   FormControl,
   IconButton,
+  Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Tooltip,
   Typography
@@ -100,6 +108,150 @@ const getStatusColor = (status) => {
     default:
       return 'default';
   }
+};
+
+const getDisplayValue = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return '-';
+  }
+
+  return value;
+};
+
+const RequestDisplayRecordsTable = ({ records = [] }) => {
+  return (
+    <TableContainer
+      component={Paper}
+      variant="outlined"
+      sx={{
+        width: '100%',
+        overflowX: 'auto'
+      }}
+    >
+      <Table
+        size="small"
+        sx={{ minWidth: 1800 }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ minWidth: 100, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Record ID
+            </TableCell>
+            <TableCell sx={{ minWidth: 150, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Region
+            </TableCell>
+            <TableCell sx={{ minWidth: 200, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Store
+            </TableCell>
+            <TableCell sx={{ minWidth: 130, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Store Code
+            </TableCell>
+            <TableCell sx={{ minWidth: 130, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Branch Code
+            </TableCell>
+            <TableCell sx={{ minWidth: 280, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Product
+            </TableCell>
+            <TableCell sx={{ minWidth: 170, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Item Code
+            </TableCell>
+            <TableCell sx={{ minWidth: 160, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Table Type
+            </TableCell>
+            <TableCell
+              align="center"
+              sx={{ minWidth: 120, whiteSpace: 'nowrap', fontWeight: 700 }}
+            >
+              Table Number
+            </TableCell>
+            <TableCell sx={{ minWidth: 180, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Security Type
+            </TableCell>
+            <TableCell
+              align="center"
+              sx={{ minWidth: 100, whiteSpace: 'nowrap', fontWeight: 700 }}
+            >
+              Quantity
+            </TableCell>
+            <TableCell sx={{ minWidth: 120, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Keyboard
+            </TableCell>
+            <TableCell sx={{ minWidth: 120, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Pen
+            </TableCell>
+            <TableCell sx={{ minWidth: 150, whiteSpace: 'nowrap', fontWeight: 700 }}>
+              Created At
+            </TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {records.map((record, index) => (
+            <TableRow
+              key={record?.id ?? `display-record-${index}`}
+              hover
+            >
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.id)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.region_name)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.store_name)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.store_code)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.branch_code)}
+              </TableCell>
+              <TableCell
+                sx={{
+                  minWidth: 280,
+                  maxWidth: 380,
+                  whiteSpace: 'normal',
+                  overflowWrap: 'anywhere'
+                }}
+              >
+                {getDisplayValue(record?.product_name)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.product_sku)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.table_type_name)}
+              </TableCell>
+              <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.table_number)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.security_type_name)}
+              </TableCell>
+              <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.quantity)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.keyboard)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {getDisplayValue(record?.pen)}
+              </TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                {record?.created_at
+                  ? formatDate(record.created_at)
+                  : '-'}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 };
 
 const getDisplayRecordLabel = (record) => {
@@ -664,6 +816,8 @@ export default function ChangeRequestsPage() {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [recordDetailOpen, setRecordDetailOpen] = useState(false);
+  const [recordDetail, setRecordDetail] = useState(null);
 
   const showApiError = useCallback(
     (error) => {
@@ -820,6 +974,68 @@ export default function ChangeRequestsPage() {
     onError: showApiError
   });
 
+
+  const recordDetailMutation = useMutation({
+    mutationFn: async (requestId) => {
+      const response = await api.get(
+        `/api/inventory/request-display-records/${requestId}`
+      );
+
+      return response.data;
+    },
+    onSuccess: (responseData) => {
+      const detailData = responseData?.data ?? responseData;
+
+      setRecordDetail(
+        detailData && typeof detailData === 'object'
+          ? detailData
+          : null
+      );
+    },
+    onError: (requestError) => {
+      setRecordDetail(null);
+      showApiError(requestError);
+    }
+  });
+
+  const recordDetailRecords = useMemo(
+    () =>
+      Array.isArray(recordDetail?.display_records)
+        ? recordDetail.display_records
+        : [],
+    [recordDetail]
+  );
+
+  const handleOpenRecordDetail = useCallback(
+    (request) => {
+      const requestId = request?.id;
+
+      if (!requestId) {
+        enqueueSnackbar('Request ID is not available.', {
+          variant: 'error',
+          preventDuplicate: true
+        });
+        return;
+      }
+
+      setRecordDetail(null);
+      recordDetailMutation.reset();
+      setRecordDetailOpen(true);
+      recordDetailMutation.mutate(requestId);
+    },
+    [recordDetailMutation, enqueueSnackbar]
+  );
+
+  const handleCloseRecordDetail = useCallback(() => {
+    if (recordDetailMutation.isPending) {
+      return;
+    }
+
+    setRecordDetailOpen(false);
+    setRecordDetail(null);
+    recordDetailMutation.reset();
+  }, [recordDetailMutation]);
+
   const requestColumns = useMemo(
     () => [
       {
@@ -832,8 +1048,23 @@ export default function ChangeRequestsPage() {
         cellSx: {
           whiteSpace: 'nowrap'
         },
-        render: (request) =>
-          request?.request_id || '-'
+        render: (request) => (
+          <Button
+            variant="text"
+            size="small"
+            onClick={() => handleOpenRecordDetail(request)}
+            disabled={recordDetailMutation.isPending}
+            sx={{
+              minWidth: 'auto',
+              p: 0,
+              textTransform: 'none',
+              fontWeight: 600,
+              textDecoration: 'underline'
+            }}
+          >
+            {request?.request_id || '-'}
+          </Button>
+        )
       },
       {
         id: 'user_name',
@@ -848,27 +1079,27 @@ export default function ChangeRequestsPage() {
         render: (request) =>
           request?.user_name || '-'
       },
-      {
-        id: 'store_name',
-        label: 'Store',
-        minWidth: 170,
-        sx: {
-          whiteSpace: 'nowrap'
-        },
-        cellSx: {
-          whiteSpace: 'nowrap'
-        },
-        render: (request) => {
-          const storeNames =
-            request?.display_records
-              ?.map((record) => record?.store_name)
-              .filter(Boolean) || [];
+      // {
+      //   id: 'store_name',
+      //   label: 'Store',
+      //   minWidth: 170,
+      //   sx: {
+      //     whiteSpace: 'nowrap'
+      //   },
+      //   cellSx: {
+      //     whiteSpace: 'nowrap'
+      //   },
+      //   render: (request) => {
+      //     const storeNames =
+      //       request?.display_records
+      //         ?.map((record) => record?.store_name)
+      //         .filter(Boolean) || [];
 
-          return storeNames.length > 0
-            ? storeNames.join(', ')
-            : '-';
-        }
-      },
+      //     return storeNames.length > 0
+      //       ? storeNames.join(', ')
+      //       : '-';
+      //   }
+      // },
       {
         id: 'request_details',
         label: 'Details',
@@ -928,7 +1159,11 @@ export default function ChangeRequestsPage() {
           formatDate(request?.created_at)
       }
     ],
-    [handleOpenRequestDetails]
+    [
+      handleOpenRequestDetails,
+      handleOpenRecordDetail,
+      recordDetailMutation.isPending
+    ]
   );
 
   useEffect(() => {
@@ -997,6 +1232,139 @@ export default function ChangeRequestsPage() {
         description={selectedRequest?.description}
         rejectionReason={selectedRequest?.rejection_reason}
       />
+
+      <Dialog
+        open={recordDetailOpen}
+        onClose={handleCloseRecordDetail}
+        maxWidth="xl"
+        fullWidth
+      >
+        <DialogTitle>
+          {recordDetailMutation.isPending
+            ? 'Loading Request Details'
+            : `Request Details: ${recordDetail?.request_id || '-'}`}
+        </DialogTitle>
+
+        <DialogContent dividers>
+          {recordDetailMutation.isPending ? (
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              spacing={2}
+              sx={{ py: 6 }}
+            >
+              <CircularProgress size={32} />
+              <Typography variant="body2" color="text.secondary">
+                Loading display records...
+              </Typography>
+            </Stack>
+          ) : recordDetailMutation.isError ? (
+            <Typography variant="body2" color="error" sx={{ py: 3 }}>
+              Unable to load display record details.
+            </Typography>
+          ) : recordDetail ? (
+            <Stack spacing={3}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 3
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Request ID:{' '}
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    fontWeight={700}
+                    color="text.primary"
+                  >
+                    {getDisplayValue(recordDetail?.request_id)}
+                  </Typography>
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Status:{' '}
+                  <Chip
+                    size="small"
+                    label={recordDetail?.status || 'In Process'}
+                    color={getStatusColor(recordDetail?.status)}
+                    variant="outlined"
+                    sx={{ ml: 0.5 }}
+                  />
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Total Records:{' '}
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    fontWeight={700}
+                    color="text.primary"
+                  >
+                    {recordDetailRecords.length}
+                  </Typography>
+                </Typography>
+              </Box>
+
+              {recordDetailRecords.length > 0 ? (
+                <RequestDisplayRecordsTable records={recordDetailRecords} />
+              ) : (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ py: 4, textAlign: 'center' }}
+                >
+                  No display records are attached to this request.
+                </Typography>
+              )}
+
+              <Box
+                sx={{
+                  p: 1.5,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ mb: 0.5 }}
+                >
+                  Description
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  fontWeight={500}
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'anywhere'
+                  }}
+                >
+                  {getDisplayValue(recordDetail?.description)}
+                </Typography>
+              </Box>
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+              Request details are not available.
+            </Typography>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={handleCloseRecordDetail}
+            disabled={recordDetailMutation.isPending}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={open}
