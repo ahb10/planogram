@@ -27,8 +27,15 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography
 } from '@mui/material';
@@ -93,6 +100,313 @@ const getRequestStatus = (requestStatus) => {
   );
 };
 
+const getDisplayValue = (value) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return '-';
+  }
+
+  return value;
+};
+
+const RequestDisplayRecordsTable = ({
+  records = []
+}) => {
+  return (
+    <TableContainer
+      component={Paper}
+      variant="outlined"
+      sx={{
+        width: '100%',
+        overflowX: 'auto'
+      }}
+    >
+      <Table
+        size="small"
+        sx={{
+          minWidth: 1800
+        }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell
+              sx={{
+                minWidth: 100,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Record ID
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 150,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Region
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 200,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Store
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 130,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Store Code
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 130,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Branch Code
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 280,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Product
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 170,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Item Code
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 160,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Table Type
+            </TableCell>
+
+            <TableCell
+              align="center"
+              sx={{
+                minWidth: 120,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Table Number
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 180,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Security Type
+            </TableCell>
+
+            <TableCell
+              align="center"
+              sx={{
+                minWidth: 100,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Quantity
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 120,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Keyboard
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 120,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Pen
+            </TableCell>
+
+            <TableCell
+              sx={{
+                minWidth: 150,
+                whiteSpace: 'nowrap',
+                fontWeight: 700
+              }}
+            >
+              Created At
+            </TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {records.map((record, index) => (
+            <TableRow
+              key={
+                record?.id ??
+                `display-record-${index}`
+              }
+              hover
+            >
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(record?.id)}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.region_name
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.store_name
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.store_code
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.branch_code
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{
+                  minWidth: 280,
+                  maxWidth: 380,
+                  whiteSpace: 'normal',
+                  overflowWrap: 'anywhere'
+                }}
+              >
+                {getDisplayValue(
+                  record?.product_name
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.product_sku
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.table_type_name
+                )}
+              </TableCell>
+
+              <TableCell
+                align="center"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.table_number
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.security_type_name
+                )}
+              </TableCell>
+
+              <TableCell
+                align="center"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.quantity
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(
+                  record?.keyboard
+                )}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {getDisplayValue(record?.pen)}
+              </TableCell>
+
+              <TableCell
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {record?.created_at
+                  ? formatDate(record.created_at)
+                  : '-'}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
 const AdminChangeRequest = () => {
   const api = useAxios();
   const queryClient = useQueryClient();
@@ -118,8 +432,6 @@ const AdminChangeRequest = () => {
 
   const [recordDetail, setRecordDetail] =
     useState(null);
-
-  const [description, setDescription] = useState("")
 
   const showApiError = useCallback(
     (error) => {
@@ -273,16 +585,24 @@ const AdminChangeRequest = () => {
   }, [requestData?.total_pages, page]);
 
   const recordDetailMutation = useMutation({
-    mutationFn: async (recordId) => {
+    mutationFn: async (requestId) => {
       const response = await api.get(
-        `/api/inventory/record-detail/${recordId}`
+        `/api/inventory/request-display-records/${requestId}`
       );
 
       return response.data;
     },
 
     onSuccess: (responseData) => {
-      setRecordDetail(responseData?.data || null);
+      const detailData =
+        responseData?.data ?? responseData;
+
+      setRecordDetail(
+        detailData &&
+          typeof detailData === 'object'
+          ? detailData
+          : null
+      );
     },
 
     onError: (error) => {
@@ -291,17 +611,21 @@ const AdminChangeRequest = () => {
     }
   });
 
+  const recordDetailRecords =
+    useMemo(() => {
+      return Array.isArray(
+        recordDetail?.display_records
+      )
+        ? recordDetail.display_records
+        : [];
+    }, [recordDetail]);
+
   const handleOpenRecordDetail = useCallback(
     (request) => {
-      const recordId =
-        request?.display_record_id ??
-        (
-          typeof request?.display_record === 'object'
-            ? request?.display_record?.id
-            : request?.display_record
-        );
+      console.log(request, "requestrequestrequest")
+      const requestId = request?.id;
 
-      if (!recordId) {
+      if (!requestId) {
         enqueueSnackbar(
           'Display record ID is not available.',
           {
@@ -316,7 +640,7 @@ const AdminChangeRequest = () => {
       setRecordDetail(null);
       recordDetailMutation.reset();
       setRecordDetailOpen(true);
-      recordDetailMutation.mutate(recordId);
+      recordDetailMutation.mutate(requestId);
     },
     [recordDetailMutation, enqueueSnackbar]
   );
@@ -442,9 +766,8 @@ const AdminChangeRequest = () => {
           <Button
             variant="text"
             size="small"
-            onClick={() => {
-              handleOpenRecordDetail(request); setDescription(request?.description)
-            }
+            onClick={() =>
+              handleOpenRecordDetail(request)
             }
             disabled={
               recordDetailMutation.isPending
@@ -942,16 +1265,17 @@ const AdminChangeRequest = () => {
       <Dialog
         open={recordDetailOpen}
         onClose={handleCloseRecordDetail}
-        maxWidth="sm"
+        maxWidth="xl"
         fullWidth
       >
         <DialogTitle>
           {recordDetailMutation.isPending
-            ? 'Loading Display Record'
-            : `Display Record Details for ID: ${recordDetail?.id || '-'}`}
+            ? 'Loading Request Details'
+            : `Request Details: ${recordDetail?.request_id || '-'
+            }`}
         </DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           {recordDetailMutation.isPending ? (
             <Stack
               alignItems="center"
@@ -965,7 +1289,7 @@ const AdminChangeRequest = () => {
                 variant="body2"
                 color="text.secondary"
               >
-                Loading display record...
+                Loading display records...
               </Typography>
             </Stack>
           ) : recordDetailMutation.isError ? (
@@ -974,98 +1298,95 @@ const AdminChangeRequest = () => {
               color="error"
               sx={{ py: 3 }}
             >
-              Unable to load display record details.
+              Unable to load display record
+              details.
             </Typography>
           ) : recordDetail ? (
-            <>
+            <Stack spacing={3}>
               <Box
                 sx={{
-                  mt: 1,
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, minmax(0, 1fr))'
-                  },
-                  gap: 2
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 3
                 }}
               >
-                <RecordDetailItem
-                  label="Region"
-                  value={recordDetail?.region_name}
-                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Request ID:{' '}
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    fontWeight={700}
+                    color="text.primary"
+                  >
+                    {getDisplayValue(
+                      recordDetail?.request_id
+                    )}
+                  </Typography>
+                </Typography>
 
-                <RecordDetailItem
-                  label="Store"
-                  value={recordDetail?.store_name}
-                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Status:{' '}
+                  <Chip
+                    size="small"
+                    label={
+                      recordDetail?.status ||
+                      'In Process'
+                    }
+                    color={getStatusColor(
+                      recordDetail?.status
+                    )}
+                    variant="outlined"
+                    sx={{ ml: 0.5 }}
+                  />
+                </Typography>
 
-                <RecordDetailItem
-                  label="Store Code"
-                  value={recordDetail?.store_code}
-                />
-
-                <RecordDetailItem
-                  label="Branch Code"
-                  value={recordDetail?.branch_code}
-                />
-
-                <RecordDetailItem
-                  label="Table Type"
-                  value={recordDetail?.table_type_name}
-                />
-                {/* 
-              <RecordDetailItem
-                label="Table Number"
-                value={recordDetail?.table_number}
-              /> */}
-
-                <RecordDetailItem
-                  label="Product"
-                  value={recordDetail?.product_name}
-                />
-
-                <RecordDetailItem
-                  label="Item Code"
-                  value={recordDetail?.product_sku}
-                />
-
-                <RecordDetailItem
-                  label="Security Type"
-                  value={recordDetail?.security_type_name}
-                />
-
-                <RecordDetailItem
-                  label="Quantity"
-                  value={recordDetail?.quantity}
-                />
-
-                <RecordDetailItem
-                  label="Keyboard"
-                  value={recordDetail?.keyboard}
-                />
-
-                <RecordDetailItem
-                  label="Pen"
-                  value={recordDetail?.pen}
-                />
-
-                <RecordDetailItem
-                  label="Created At"
-                  value={
-                    recordDetail?.created_at
-                      ? formatDate(recordDetail.created_at)
-                      : '-'
-                  }
-                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Total Records:{' '}
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    fontWeight={700}
+                    color="text.primary"
+                  >
+                    {recordDetailRecords.length}
+                  </Typography>
+                </Typography>
               </Box>
+
+              {recordDetailRecords.length > 0 ? (
+                <RequestDisplayRecordsTable
+                  records={recordDetailRecords}
+                />
+              ) : (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    py: 4,
+                    textAlign: 'center'
+                  }}
+                >
+                  No display records are attached
+                  to this request.
+                </Typography>
+              )}
 
               <Box
                 sx={{
                   p: 1.5,
                   border: 1,
                   borderColor: 'divider',
-                  borderRadius: 1,
-                  marginTop: 2
+                  borderRadius: 1
                 }}
               >
                 <Typography
@@ -1081,28 +1402,33 @@ const AdminChangeRequest = () => {
                   variant="body2"
                   fontWeight={500}
                   sx={{
+                    whiteSpace: 'pre-wrap',
                     overflowWrap: 'anywhere'
                   }}
                 >
-                  {description}
+                  {getDisplayValue(
+                    recordDetail?.description
+                  )}
                 </Typography>
               </Box>
-            </>
+            </Stack>
           ) : (
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{ py: 3 }}
             >
-              Display record details are not available.
+              Request details are not available.
             </Typography>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button
             onClick={handleCloseRecordDetail}
-            disabled={recordDetailMutation.isPending}
+            disabled={
+              recordDetailMutation.isPending
+            }
           >
             Close
           </Button>

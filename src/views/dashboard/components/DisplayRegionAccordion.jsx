@@ -14,12 +14,10 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import ClearIcon from '@mui/icons-material/Clear';
-import PostAddOutlinedIcon from '@mui/icons-material/PostAddOutlined';
 
 import { useState } from "react";
 import { useSnackbar } from "notistack";
 import useAxios from "api/useAxios";
-import CreateRequestDialog from "./CreateRequestDialog";
 import useAppStore from "store/appStore";
 
 
@@ -48,8 +46,8 @@ const SkuTable = ({
     >
       <table
         className={`de-sku-table ${userType === "user"
-            ? "has-request-column"
-            : ""
+          ? "has-request-column"
+          : ""
           }`}
       >
         <colgroup>
@@ -539,59 +537,10 @@ const StoreSection = ({
 const DisplayRegionAccordion = ({
   region,
   expanded,
-  onToggle
+  onToggle,
+  selectedRecords = [],
+  onToggleRecord
 }) => {
-  const { userType } = useAppStore();
-
-  const [
-    selectedRecords,
-    setSelectedRecords
-  ] = useState([]);
-
-  const [
-    createRequestOpen,
-    setCreateRequestOpen
-  ] = useState(false);
-
-  const handleToggleRecord = (record) => {
-    setSelectedRecords(
-      (currentRecords) => {
-        const alreadySelected =
-          currentRecords.some(
-            (currentRecord) =>
-              String(currentRecord.id) ===
-              String(record.id)
-          );
-
-        if (alreadySelected) {
-          return currentRecords.filter(
-            (currentRecord) =>
-              String(currentRecord.id) !==
-              String(record.id)
-          );
-        }
-
-        return [
-          ...currentRecords,
-          record
-        ];
-      }
-    );
-  };
-
-  const handleOpenCreateRequest = () => {
-    if (selectedRecords.length === 0) {
-      return;
-    }
-
-    setCreateRequestOpen(true);
-  };
-
-  const handleCloseCreateRequest = () => {
-    setCreateRequestOpen(false);
-    setSelectedRecords([]);
-  };
-
   return (
     <article
       className={`de-region-card ${expanded ? "is-expanded" : ""
@@ -631,76 +580,25 @@ const DisplayRegionAccordion = ({
         unmountOnExit
       >
         <div className="de-region-content">
-          {userType === "user" && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent:
-                  "flex-end",
-                gap: 1,
-                mb: 1,
-                mt:1,
-                mr:1,
-              }}
-            >
-              {selectedRecords.length >
-                0 && (
-                  <Button
-                    variant="text"
-                    onClick={() =>
-                      setSelectedRecords([])
-                    }
-                  >
-                    Clear Selection
-                  </Button>
-                )}
-
-              <Button
-                variant="contained"
-                startIcon={
-                  <PostAddOutlinedIcon />
-                }
-                onClick={
-                  handleOpenCreateRequest
-                }
-                disabled={
-                  selectedRecords.length ===
-                  0
-                }
-              >
-                Create Request
-                {selectedRecords.length >
-                  0
-                  ? ` (${selectedRecords.length})`
-                  : ""}
-              </Button>
-            </Box>
-          )}
-
           {region.stores.map((store) => (
             <StoreSection
-              key={store.key}
+              key={
+                store.key ??
+                store.id ??
+                store.name
+              }
               store={store}
               regionName={region.name}
               selectedRecords={
                 selectedRecords
               }
               onToggleRecord={
-                handleToggleRecord
+                onToggleRecord
               }
             />
           ))}
         </div>
       </Collapse>
-
-      <CreateRequestDialog
-        open={createRequestOpen}
-        onClose={
-          handleCloseCreateRequest
-        }
-        records={selectedRecords}
-      />
     </article>
   );
 };

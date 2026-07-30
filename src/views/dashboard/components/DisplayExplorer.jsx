@@ -1,7 +1,9 @@
 import {
   ButtonBase,
   CircularProgress,
-  InputBase
+  InputBase,
+  Box,
+  Button
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -11,6 +13,7 @@ import {
   useMemo,
   useState
 } from "react";
+import PostAddOutlinedIcon from '@mui/icons-material/PostAddOutlined';
 
 import "../../../assets/scss/display-explorer.scss";
 import {
@@ -21,6 +24,8 @@ import MultiSelectFilter from "./MultiSelectFilters";
 import DisplayRegionAccordion from "./DisplayRegionAccordion";
 import DisplayOverview from "./DisplayOverview";
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import CreateRequestDialog from "./CreateRequestDialog";
+import useAppStore from "store/appStore";
 
 const getListFromResponse = (responseData) => {
   if (Array.isArray(responseData)) {
@@ -237,6 +242,7 @@ const DisplayExplorer = ({
   defaultExpandedRegion = "Al Kharj"
 }) => {
   const api = useAxios();
+  const { userType } = useAppStore();
 
   const [activeTab, setActiveTab] =
     useState("overview");
@@ -245,6 +251,16 @@ const DisplayExplorer = ({
     selectedRegions,
     setSelectedRegions
   ] = useState([]);
+
+  const [
+    selectedRequestRecords,
+    setSelectedRequestRecords
+  ] = useState([]);
+
+  const [
+    createRequestOpen,
+    setCreateRequestOpen
+  ] = useState(false);
 
   const [
     selectedStores,
@@ -828,6 +844,51 @@ const DisplayExplorer = ({
     );
   };
 
+  const handleToggleRequestRecord = (record) => {
+    setSelectedRequestRecords(
+      (currentRecords) => {
+        const alreadySelected =
+          currentRecords.some(
+            (currentRecord) =>
+              String(currentRecord.id) ===
+              String(record.id)
+          );
+
+        if (alreadySelected) {
+          return currentRecords.filter(
+            (currentRecord) =>
+              String(currentRecord.id) !==
+              String(record.id)
+          );
+        }
+
+        return [
+          ...currentRecords,
+          record
+        ];
+      }
+    );
+  };
+
+  const handleOpenCreateRequest = () => {
+    if (
+      selectedRequestRecords.length === 0
+    ) {
+      return;
+    }
+
+    setCreateRequestOpen(true);
+  };
+
+  const handleCloseCreateRequest = () => {
+    setCreateRequestOpen(false);
+    setSelectedRequestRecords([]);
+  };
+
+  const handleClearRequestSelection = () => {
+    setSelectedRequestRecords([]);
+  };
+
   return (
     <div className="display-explorer-page">
       <nav className="de-tabs">
@@ -1063,59 +1124,104 @@ const DisplayExplorer = ({
           </section>
 
           <section className="de-region-list">
+            {userType === "user" &&
+              groupedRegions.length > 0 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 1,
+                    mb: 2
+                  }}
+                >
+                  {selectedRequestRecords.length >
+                    0 && (
+                      <Button
+                        variant="text"
+                        onClick={
+                          handleClearRequestSelection
+                        }
+                      >
+                        Clear Selection
+                      </Button>
+                    )}
+
+                  <Button
+                    variant="contained"
+                    startIcon={
+                      <PostAddOutlinedIcon />
+                    }
+                    onClick={
+                      handleOpenCreateRequest
+                    }
+                    disabled={
+                      selectedRequestRecords.length ===
+                      0
+                    }
+                  >
+                    Create Request
+                    {selectedRequestRecords.length >
+                      0
+                      ? ` (${selectedRequestRecords.length})`
+                      : ""}
+                  </Button>
+                </Box>
+              )}
+
             {filterOptionsLoading ? (
               <div className="de-empty-state">
-                Loading display
-                filters...
+                Loading display filters...
               </div>
             ) : filterOptionsError ? (
               <div className="de-empty-state">
-                Unable to load
-                display filters.
+                Unable to load display filters.
               </div>
             ) : isRecordsLoading &&
               records.length === 0 ? (
               <div className="de-empty-state">
-                <CircularProgress
-                  size={24}
-                />
+                <CircularProgress size={24} />
 
                 <div>
-                  Loading display
-                  records...
+                  Loading display records...
                 </div>
               </div>
             ) : isRecordsError ? (
               <div className="de-empty-state">
-                Failed to load
-                records:{" "}
+                Failed to load records:{" "}
                 {recordsError?.message ||
                   "Unknown error"}
               </div>
-            ) : groupedRegions.length >
-              0 ? (
-              groupedRegions.map(
-                (region) => (
-                  <DisplayRegionAccordion
-                    key={region.name}
-                    region={region}
-                    expanded={expandedRegions.has(
-                      region.name
-                    )}
-                    onToggle={() =>
-                      toggleRegion(
-                        region.name
-                      )
-                    }
-                  />
-                )
-              )
+            ) : groupedRegions.length > 0 ? (
+              groupedRegions.map((region) => (
+                <DisplayRegionAccordion
+                  key={region.name}
+                  region={region}
+                  expanded={expandedRegions.has(
+                    region.name
+                  )}
+                  onToggle={() =>
+                    toggleRegion(region.name)
+                  }
+                  selectedRecords={
+                    selectedRequestRecords
+                  }
+                  onToggleRecord={
+                    handleToggleRequestRecord
+                  }
+                />
+              ))
             ) : (
               <div className="de-empty-state">
-                No matching display
-                records found.
+                No matching display records found.
               </div>
             )}
+
+            <CreateRequestDialog
+              open={createRequestOpen}
+              onClose={handleCloseCreateRequest}
+              records={selectedRequestRecords}
+            />
           </section>
         </main>
       )}

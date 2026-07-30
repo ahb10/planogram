@@ -81,6 +81,9 @@ const createUpdateFormData = (values) => {
   formData.append('name', values.name.trim());
   formData.append('email', values.email.trim());
   formData.append('user_type', values.user_type);
+  if(values.password) {
+    formData.append('password', values.password);
+  }
 
   return formData;
 };
@@ -650,13 +653,13 @@ export default function UserManagementPage() {
                       )}
                   </FormControl>
 
-                  {!selectedUser && (
+                  {/* {!selectedUser && ( */}
                     <FormControl
                       fullWidth
-                      error={Boolean(
-                        touched.password &&
-                        errors.password
-                      )}
+                      // error={Boolean(
+                      //   touched.password &&
+                      //   errors.password
+                      // )}
                     >
                       <InputLabel htmlFor="user-password">
                         Password
@@ -706,7 +709,7 @@ export default function UserManagementPage() {
                         }
                       />
 
-                      {touched.password &&
+                      {/* {touched.password &&
                         errors.password && (
                           <Typography
                             variant="caption"
@@ -715,9 +718,9 @@ export default function UserManagementPage() {
                           >
                             {errors.password}
                           </Typography>
-                        )}
+                        )} */}
                     </FormControl>
-                  )}
+                   {/* )} */}
                 </Stack>
               </form>
             )}
