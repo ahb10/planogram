@@ -51,7 +51,7 @@ export default function SecurityTypePage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.errors?.name[0];
+      const message = error?.response?.data?.message;
 
       if (!message) {
         return;

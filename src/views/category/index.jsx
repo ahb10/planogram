@@ -50,7 +50,7 @@ export default function CategoryPage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.errors?.name[0] || "Somethign went wrong...";
+      const message = error?.response?.data?.message || "Somethign went wrong...";
 
       if (!message) {
         return;

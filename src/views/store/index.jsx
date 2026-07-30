@@ -149,6 +149,62 @@ const buildStoreFormData = (
   return formData;
 };
 
+const getFirstErrorMessage = (value) => {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const message = getFirstErrorMessage(item);
+
+      if (message) {
+        return message;
+      }
+    }
+
+    return null;
+  }
+
+  if (
+    value &&
+    typeof value === 'object'
+  ) {
+    for (const item of Object.values(value)) {
+      const message = getFirstErrorMessage(item);
+
+      if (message) {
+        return message;
+      }
+    }
+  }
+
+  return null;
+};
+
+const getApiErrorMessage = (error) => {
+  const responseData =
+    error?.response?.data;
+
+  return (
+    getFirstErrorMessage(
+      responseData?.message
+    ) ||
+    getFirstErrorMessage(
+      responseData?.detail
+    ) ||
+    getFirstErrorMessage(
+      responseData?.errors
+    ) ||
+    getFirstErrorMessage(
+      responseData?.non_field_errors
+    ) ||
+    getFirstErrorMessage(responseData) ||
+    error?.message ||
+    'Something went wrong. Please try again.'
+  );
+};
+
 export default function StorePage() {
   const api = useAxios();
   const queryClient = useQueryClient();
@@ -167,7 +223,7 @@ export default function StorePage() {
 
   const showApiError = useCallback(
     (error) => {
-      const message = error?.response?.data?.errors?.name[0];
+      const message = error?.response?.data?.message;
 
       if (!message) {
         return;

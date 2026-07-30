@@ -80,7 +80,7 @@ const getOptionName = (options, currentValue) => {
 };
 
 const getApiErrorMessage = (error) => {
-  const responseData = error?.response?.data?.errors?.name[0] || "Something went wrong. Please try again.";
+  const responseData = error?.response?.data?.message || "Something went wrong. Please try again.";
 
   if (responseData) {
     return responseData.message;
