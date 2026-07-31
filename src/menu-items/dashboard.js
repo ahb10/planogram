@@ -11,6 +11,8 @@ import StorageIcon from '@mui/icons-material/Storage';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import BusinessIcon from '@mui/icons-material/Business';
+import HistoryIcon from '@mui/icons-material/History';  
+
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
 const authState = JSON.parse(localStorage.getItem('auth-state') || '{}');
@@ -114,7 +116,7 @@ const dashboard = {
       title: 'Activity',
       type: 'item',
       url: '/activity',
-      icon: FormatListBulletedIcon,
+      icon: HistoryIcon,
       breadcrumbs: true
     },
   ]
