@@ -11,6 +11,8 @@ import StorageIcon from '@mui/icons-material/Storage';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import BusinessIcon from '@mui/icons-material/Business';
+import HistoryIcon from '@mui/icons-material/History';  
+
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
 const authState = JSON.parse(localStorage.getItem('auth-state') || '{}');
@@ -107,6 +109,14 @@ const dashboard = {
       type: 'item',
       url: '/admin-change-request',
       icon: FormatListBulletedIcon,
+      breadcrumbs: true
+    },
+    {
+      id: 'activity',
+      title: 'Activity',
+      type: 'item',
+      url: '/activity',
+      icon: HistoryIcon,
       breadcrumbs: true
     },
   ]

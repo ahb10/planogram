@@ -24,6 +24,7 @@ const SecurityTypePage = Loadable(lazy(() => import('views/security-types')));
 const DisplayRecordsPage = Loadable(lazy(() => import('views/display-record')));
 const UserManagementPage = Loadable(lazy(() => import('views/user-management')));
 const AdminChangeRequest = Loadable(lazy(() => import('views/admin-change-request')));
+const AdminActivity = Loadable(lazy(() => import('views/activity')));
 
 
 // user routing
@@ -91,6 +92,10 @@ const MainRoutes = {
     {
       path: 'admin-change-request',
       element: <AdminChangeRequest />
+    },
+    {
+      path: 'activity',
+      element: <AdminActivity />
     },
 
     // user routing
