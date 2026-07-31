@@ -109,6 +109,14 @@ const dashboard = {
       icon: FormatListBulletedIcon,
       breadcrumbs: true
     },
+    {
+      id: 'activity',
+      title: 'Activity',
+      type: 'item',
+      url: '/activity',
+      icon: FormatListBulletedIcon,
+      breadcrumbs: true
+    },
   ]
 };
 
