@@ -14,11 +14,16 @@ import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import MainCard from 'ui-component/cards/MainCard';
 import ServerTable from 'ui-component/tables/server-side-custom-table';
 
 import useAxios from '../../api/useAxios';
+import ActivityDetailDialog from './components/activity-detail';
 
 
 const ACTIVITY_TABS = [
@@ -39,6 +44,18 @@ export default function ActivityPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+
+  const handleOpenDetail = useCallback((activity) => {
+    setSelectedActivity(activity);
+    setDetailOpen(true);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setDetailOpen(false);
+    setSelectedActivity(null);
+  }, []);
 
   // --------------------------------------------------
   // Tab
@@ -160,7 +177,7 @@ export default function ActivityPage() {
 
     queryFn: async () => {
       const response = await api.get(
-        '/api/activity/list',
+        '/api/activity/grouped-list',
         {
           params: {
             filter_by: selectedFilter,
@@ -182,6 +199,40 @@ export default function ActivityPage() {
 
 
   // --------------------------------------------------
+  // Fetch Detail Activity API
+  // --------------------------------------------------
+
+  const {
+    data: detailResponse,
+    isLoading: detailLoading,
+    isFetching: detailFetching,
+    isError: detailIsError,
+    error: detailError
+  } = useQuery({
+    queryKey: [
+      'activity-detail',
+      selectedActivity?.change_id
+    ],
+
+    queryFn: async () => {
+      const response = await api.get(
+        `/api/activity/detail/${selectedActivity.change_id}`
+      );
+
+      return response.data;
+    },
+
+    enabled: Boolean(
+      detailOpen &&
+      selectedActivity?.change_id
+    ),
+
+    retry: false
+  });
+
+  const activityDetail = detailResponse?.data || null;
+
+  // --------------------------------------------------
   // Handle API Error
   // --------------------------------------------------
 
@@ -193,6 +244,27 @@ export default function ActivityPage() {
     isError,
     error,
     showApiError
+  ]);
+
+  // detail API error handling
+
+  useEffect(() => {
+    if (!detailIsError || !detailError) {
+      return;
+    }
+
+    const message =
+      detailError?.response?.data?.message ||
+      'Something went wrong while loading activity detail.';
+
+    enqueueSnackbar(message, {
+      variant: 'error',
+      preventDuplicate: true
+    });
+  }, [
+    detailIsError,
+    detailError,
+    enqueueSnackbar
   ]);
 
 
@@ -260,21 +332,23 @@ export default function ActivityPage() {
       },
 
       {
-        id: 'field_name',
-        label: 'Field',
+        id: 'field_count',
+        label: 'Field Count',
         minWidth: 150,
 
         sx: {
-          whiteSpace: 'nowrap'
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
         },
 
         cellSx: {
           whiteSpace: 'normal',
-          overflowWrap: 'anywhere'
+          overflowWrap: 'anywhere',
+          textAlign: 'center',
         },
 
         render: (activity) =>
-          activity?.field_name || '-'
+          activity?.field_count || '-'
       },
 
       {
@@ -294,51 +368,6 @@ export default function ActivityPage() {
         render: (activity) =>
           activity?.summary || '-'
       },
-
-      {
-  id: 'old_value',
-  label: 'Old Value',
-  minWidth: 150,
-
-  sx: {
-    whiteSpace: 'nowrap'
-  },
-
-  cellSx: {
-    whiteSpace: 'normal',
-    overflowWrap: 'anywhere'
-  },
-
-  render: (activity) => {
-    if (activity?.field_name === 'Last Login') {
-      return formatDateTime(activity?.old_value);
-    }
-
-    return activity?.old_value || '-';
-  }
-},
-{
-  id: 'new_value',
-  label: 'New Value',
-  minWidth: 150,
-
-  sx: {
-    whiteSpace: 'nowrap'
-  },
-
-  cellSx: {
-    whiteSpace: 'normal',
-    overflowWrap: 'anywhere'
-  },
-
-  render: (activity) => {
-    if (activity?.field_name === 'Last Login') {
-      return formatDateTime(activity?.new_value);
-    }
-
-    return activity?.new_value || '-';
-  }
-},
 
       {
         id: 'activity_performed_by',
@@ -373,47 +402,80 @@ export default function ActivityPage() {
           </div>
         )
       },
-      {
-  id: 'changed_at',
-  label: 'Date & Time',
-  minWidth: 180,
 
-  render: (activity) => {
-    if (!activity?.changed_at) {
-      return '-';
+      {
+        id: 'changed_at',
+        label: 'Date & Time',
+        minWidth: 180,
+
+        render: (activity) => {
+          if (!activity?.changed_at) {
+            return '-';
+          }
+
+          return new Date(activity.changed_at).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+      },
+
+      {
+        id: 'detail',
+        label: 'Detail',
+        minWidth: 100,
+
+        sx: {
+          whiteSpace: 'nowrap',
+          textAlign: 'center'
+        },
+
+        cellSx: {
+          whiteSpace: 'nowrap',
+          textAlign: 'center'
+        },
+
+        render: (activity) => (
+          <Tooltip title="View activity detail">
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                disabled={!activity?.change_id}
+                onClick={() => handleOpenDetail(activity)}
+                aria-label="View activity detail"
+              >
+                <VisibilityOutlinedIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        )
+      }
+    ],
+    [handleOpenDetail]
+  );
+
+
+  const formatDateTime = (value) => {
+    if (!value) return '-';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
     }
 
-    return new Date(activity.changed_at).toLocaleString('en-GB', {
+    return date.toLocaleString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-}
-    ],
-    []
-  );
-
-
-  const formatDateTime = (value) => {
-  if (!value) return '-';
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
+  };
 
   // --------------------------------------------------
   // Render
@@ -494,6 +556,14 @@ export default function ActivityPage() {
           onRowsPerPageChange={
             handleRowsPerPageChange
           }
+        />
+
+        {/* Activity Detail Dialog */}
+        <ActivityDetailDialog
+          open={detailOpen}
+          onClose={handleCloseDetail}
+          loading={detailLoading || detailFetching}
+          detail={activityDetail}
         />
 
       </Stack>
