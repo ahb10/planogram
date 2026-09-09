@@ -11,7 +11,8 @@ import StorageIcon from '@mui/icons-material/Storage';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import BusinessIcon from '@mui/icons-material/Business';
-import HistoryIcon from '@mui/icons-material/History';  
+import HistoryIcon from '@mui/icons-material/History';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 // ==============================|| DASHBOARD MENU ITEMS ||============================== //
 
@@ -117,6 +118,14 @@ const dashboard = {
       type: 'item',
       url: '/activity',
       icon: HistoryIcon,
+      breadcrumbs: true
+    },
+    {
+      id: 'bulk-add-record',
+      title: 'Bulk Add Record',
+      type: 'item',
+      url: '/bulk-add-record',
+      icon: UploadFileIcon,
       breadcrumbs: true
     },
   ]

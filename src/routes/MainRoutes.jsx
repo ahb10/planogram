@@ -22,6 +22,7 @@ const ProductsPage = Loadable(lazy(() => import('views/products')));
 const CategoryPage = Loadable(lazy(() => import('views/category')));
 const SecurityTypePage = Loadable(lazy(() => import('views/security-types')));
 const DisplayRecordsPage = Loadable(lazy(() => import('views/display-record')));
+const BulkAddRecordPage = Loadable(lazy(() => import('views/bulk-add-record')));
 const UserManagementPage = Loadable(lazy(() => import('views/user-management')));
 const AdminChangeRequest = Loadable(lazy(() => import('views/admin-change-request')));
 const AdminActivity = Loadable(lazy(() => import('views/activity')));
@@ -84,6 +85,10 @@ const MainRoutes = {
     {
       path: 'display-record',
       element: <DisplayRecordsPage />
+    },
+    {
+      path: 'bulk-add-record',
+      element: <BulkAddRecordPage />
     },
     {
       path: 'user-management',
